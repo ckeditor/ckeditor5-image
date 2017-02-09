@@ -10,6 +10,8 @@ import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-util
 import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
 import ViewContainer from '@ckeditor/ckeditor5-engine/src/view/containerelement';
 import ViewEditable from '@ckeditor/ckeditor5-engine/src/view/editableelement';
+import ViewSelection from '@ckeditor/ckeditor5-engine/src/view/selection';
+import ViewRange from '@ckeditor/ckeditor5-engine/src/view/range';
 import { widgetize } from '../../src/widget/utils';
 
 describe( 'WidgetEngine', () => {
@@ -28,6 +30,7 @@ describe( 'WidgetEngine', () => {
 				document.schema.allow( { name: '$inline', inside: 'editable' } );
 				document.schema.allow( { name: 'editable', inside: 'widget' } );
 				document.schema.allow( { name: 'editable', inside: '$root' } );
+				document.schema.registerItem( 'paragraph', '$block' );
 
 				buildModelConverter().for( editor.editing.modelToView )
 					.fromElement( 'widget' )
@@ -36,6 +39,10 @@ describe( 'WidgetEngine', () => {
 				buildModelConverter().for( editor.editing.modelToView )
 					.fromElement( 'editable' )
 					.toElement( () => new ViewEditable( 'figcaption', { contenteditable: true } ) );
+
+				buildModelConverter().for( editor.editing.modelToView )
+					.fromElement( 'paragraph' )
+					.toElement( 'p' );
 			} );
 	} );
 
@@ -87,5 +94,60 @@ describe( 'WidgetEngine', () => {
 			'</div>' +
 			'<figcaption contenteditable="true">{baz}</figcaption>'
 		);
+	} );
+
+	describe( 'selection fixing', () => {
+		let viewRoot, viewImage, oldSelection, newSelection;
+
+		beforeEach( () => {
+			// Set model data.
+			setModelData( document, '' +
+				'<paragraph>foo</paragraph><widget><editable>bar</editable></widget><paragraph>baz</paragraph>' );
+
+			// Prepare view's selectionChange event.
+			viewRoot = viewDocument.getRoot();
+			viewImage = viewRoot.getChild( 1 );
+			oldSelection = viewDocument.selection;
+			newSelection = new ViewSelection();
+		} );
+
+		it( 'is inside widget', () => {
+			newSelection.addRange( ViewRange.createFromParentsAndOffsets( viewImage, 0, viewImage, 1 ) );
+			viewDocument.fire( 'selectionChange', { oldSelection, newSelection } );
+
+			expect( getViewData( viewDocument ) ).to.equal(
+				'<p>foo</p>' +
+				'[<div class="ck-widget ck-widget_selected" contenteditable="false">' +
+					'<figcaption contenteditable="true">bar</figcaption>' +
+				'</div>]' +
+				'<p>baz</p>'
+			);
+		} );
+
+		it( 'starts in the widget', () => {
+			newSelection.addRange( ViewRange.createFromParentsAndOffsets( viewImage, 0, viewRoot, 3 ) );
+			viewDocument.fire( 'selectionChange', { oldSelection, newSelection } );
+
+			expect( getViewData( viewDocument ) ).to.equal(
+				'<p>foo</p>' +
+				'<div class="ck-widget" contenteditable="false">' +
+					'<figcaption contenteditable="true">bar</figcaption>' +
+				'</div>' +
+				'[<p>baz</p>]'
+			);
+		} );
+
+		it( 'ends in the widget', () => {
+			newSelection.addRange( ViewRange.createFromParentsAndOffsets( viewRoot, 0, viewImage, 1 ) );
+			viewDocument.fire( 'selectionChange', { oldSelection, newSelection } );
+
+			expect( getViewData( viewDocument ) ).to.equal(
+				'[<p>foo</p>]' +
+				'<div class="ck-widget" contenteditable="false">' +
+					'<figcaption contenteditable="true">bar</figcaption>' +
+				'</div>' +
+				'<p>baz</p>'
+			);
+		} );
 	} );
 } );
