@@ -8,10 +8,10 @@
 
 @include ck-color-add( (
 	'widget-blurred': #ddd,
-	'widget-hover': yellow
+	'widget-hover': #f3d464
 ) );
 
-$widget-outline-thickness: 2px;
+$widget-outline-thickness: 3px;
 
 .ck-widget {
 	margin: ck-spacing() 0;
@@ -34,6 +34,7 @@ $widget-outline-thickness: 2px;
 		// These styles show a different border for a blink of an eye, so `:focus` need to have same styles applied.
 		&.ck-editable_focused, &:focus {
 			@include ck-focus-ring( 'outline' );
+			outline-width: $widget-outline-thickness;
 			@include ck-box-shadow( $ck-inner-shadow );
 			background-color: ck-color( 'background' );
 		}

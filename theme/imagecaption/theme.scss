@@ -6,10 +6,14 @@
 @import '~@ckeditor/ckeditor5-theme-lark/theme/helpers/_fonts.scss';
 
 .ck-editor__editable {
-	.image > figcaption {
+	.image {
+		padding-bottom: 1px;
 		background-color: ck-color( 'foreground' );
-		padding: ck-spacing();
+	}
+
+	.image > figcaption {
+		padding: ck-spacing( 'small' );
+		margin: ck-spacing();
 		font-size: ck-font-size( -1 );
-		color: ck-color( 'text', 40 );
 	}
 }
