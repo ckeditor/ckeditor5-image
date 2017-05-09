@@ -5,7 +5,6 @@
 
 import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
 import Image from '../src/image';
-import ImageToolbar from '../src/imagetoolbar';
 import ImageTextAlternative from '../src/imagetextalternative';
 import ImageTextAlternativeEngine from '../src/imagetextalternative/imagetextalternativeengine';
 import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
@@ -16,7 +15,7 @@ import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
 /* global Event */
 
 describe( 'ImageTextAlternative', () => {
-	let editor, plugin, command, balloonPanel, form;
+	let editor, plugin, command, balloon, form, editableElement, editingView;
 
 	beforeEach( () => {
 		const editorElement = global.document.createElement( 'div' );
@@ -27,11 +26,14 @@ describe( 'ImageTextAlternative', () => {
 		} )
 		.then( newEditor => {
 			editor = newEditor;
-			newEditor.editing.view.attachDomRoot( editorElement );
+			editingView = editor.editing.view;
+			editingView.attachDomRoot( editorElement );
 			plugin = editor.plugins.get( ImageTextAlternative );
 			command = editor.commands.get( 'imageTextAlternative' );
-			balloonPanel = plugin.balloonPanel;
+			balloon = plugin.balloon;
 			form = plugin.form;
+			editableElement = editingView.domConverter.getCorrespondingDomElement( editingView.selection.editableElement );
+			sinon.stub( balloon, 'add' ).returns( Promise.resolve() );
 		} );
 	} );
 
@@ -66,159 +68,139 @@ describe( 'ImageTextAlternative', () => {
 			expect( button.isEnabled ).to.be.false;
 		} );
 
+		it( 'should call #_showBalloon on #execute', () => {
+			const spy = sinon.spy( plugin, '_showBalloon' );
+			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
+
+			button.fire( 'execute' );
+			sinon.assert.calledOnce( spy );
+		} );
+	} );
+
+	describe( '_showBalloon', () => {
 		it( 'should show balloon panel on execute', () => {
-			const spy = sinon.spy( balloonPanel, 'attach' );
 			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
-			button.fire( 'execute' );
 
-			sinon.assert.calledOnce( spy );
+			return plugin._showBalloon()
+				.then( () => {
+					sinon.assert.calledOnce( balloon.add );
+					sinon.assert.calledWithExactly( balloon.add, {
+						view: form,
+						position: {
+							limiter: editableElement,
+						}
+					} );
+				} );
 		} );
 
-		it( 'should set alt attribute value to textarea and select it', () => {
-			const spy = sinon.spy( form.lebeledInput, 'select' );
+		it( 'should set alt attribute value to the field and select it', () => {
+			const spy = sinon.spy( form.labeledInput, 'select' );
 			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
-			button.fire( 'execute' );
 
-			sinon.assert.calledOnce( spy );
-			expect( plugin.form.lebeledInput.value ).equals( 'foo bar' );
+			return plugin._showBalloon()
+				.then( () => {
+					sinon.assert.calledOnce( spy );
+					expect( plugin.form.labeledInput.value ).equals( 'foo bar' );
+				} );
 		} );
 
-		it( 'should set empty text to textarea and select it when there is no alt attribute', () => {
-			const spy = sinon.spy( form.lebeledInput, 'select' );
+		it( 'should leave the field empty and select it when there is no alt attribute', () => {
+			const spy = sinon.spy( form.labeledInput, 'select' );
 			setData( editor.document, '[<image src=""></image>]' );
-			button.fire( 'execute' );
 
-			sinon.assert.calledOnce( spy );
-			expect( plugin.form.lebeledInput.value ).equals( '' );
+			return plugin._showBalloon()
+				.then( () => {
+					sinon.assert.calledOnce( spy );
+					expect( plugin.form.labeledInput.value ).equals( '' );
+				} );
+		} );
+	} );
+
+	describe( '_hideBalloon', () => {
+		beforeEach( () => {
+			sinon.stub( balloon, 'hasView' ).returns( true );
+		} );
+
+		it( 'it should remove the #form from the #balloon', () => {
+			const spy = sinon.spy( balloon, 'remove' );
+
+			return plugin._hideBalloon()
+				.then( () => {
+					sinon.assert.calledOnce( spy );
+					sinon.assert.calledWithExactly( spy, form );
+				} );
+		} );
+
+		it( 'it should focus the editing view', () => {
+			const spy = sinon.spy( editingView, 'focus' );
+
+			return plugin._hideBalloon()
+				.then( () => {
+					sinon.assert.calledOnce( spy );
+				} );
 		} );
 	} );
 
 	describe( 'balloon panel form', () => {
-		it( 'should execute command on submit', () => {
+		it( 'should execute the command on #submit', () => {
 			const spy = sinon.spy( editor, 'execute' );
-			form.fire( 'submit' );
 
-			sinon.assert.calledOnce( spy );
-			sinon.assert.calledWithExactly( spy, 'imageTextAlternative', { newValue: form.lebeledInput.inputView.element.value } );
+			plugin._showBalloon()
+				.then( () => {
+					form.fire( 'submit' );
+
+					sinon.assert.calledOnce( spy );
+					sinon.assert.calledWithExactly( spy, 'imageTextAlternative', {
+						newValue: form.labeledInput.inputView.element.value
+					} );
+				} );
 		} );
 
-		it( 'should detach panel on cancel', () => {
-			const spy = sinon.spy( balloonPanel, 'detach' );
-			form.fire( 'cancel' );
+		it( 'should hide the balloon on #cancel', () => {
+			const spy = sinon.spy( plugin, '_hideBalloon' );
 
-			sinon.assert.called( spy );
-		} );
-
-		it( 'should show ImageToolbar on cancel if present', () => {
-			const editorElement = global.document.createElement( 'div' );
-			global.document.body.appendChild( editorElement );
-
-			return ClassicTestEditor.create( editorElement, {
-				plugins: [ ImageTextAlternative, Image, ImageToolbar ],
-				image: {
-					toolbar: [ 'imageTextAlternative' ]
-				}
-			} )
-			.then( newEditor => {
-				newEditor.editing.view.attachDomRoot( editorElement );
-				const plugin = newEditor.plugins.get( ImageTextAlternative );
-				const toolbarPlugin = newEditor.plugins.get( ImageToolbar );
-				const form = plugin.form;
-
-				const spy = sinon.spy( toolbarPlugin, 'show' );
-				form.fire( 'cancel' );
-
-				sinon.assert.called( spy );
-			} );
+			plugin._showBalloon()
+				.then( () => {
+					form.fire( 'cancel' );
+					sinon.assert.called( spy );
+				} );
 		} );
 
 		describe( 'close listeners', () => {
-			let hidePanelSpy;
+			let hideSpy;
 
 			beforeEach( () => {
-				hidePanelSpy = sinon.spy( balloonPanel, 'detach' );
+				sinon.stub( balloon, 'hasView' ).returns( true );
+				hideSpy = sinon.spy( plugin, '_hideBalloon' );
 			} );
 
 			describe( 'keyboard', () => {
 				it( 'should close after `ESC` press', () => {
-					balloonPanel.isVisible = true;
 					const keyCode = keyCodes.esc;
 					const event = global.document.createEvent( 'Events' );
+
 					event.initEvent( 'keydown', true, true );
 					event.which = keyCode;
 					event.keyCode = keyCode;
 					global.document.dispatchEvent( event );
 
-					sinon.assert.called( hidePanelSpy );
+					sinon.assert.calledOnce( hideSpy );
 				} );
 			} );
 
 			describe( 'mouse', () => {
 				it( 'should close and not focus editable on click outside the panel', () => {
-					balloonPanel.isVisible = true;
 					global.document.body.dispatchEvent( new Event( 'mouseup', { bubbles: true } ) );
 
-					sinon.assert.called( hidePanelSpy );
+					sinon.assert.called( hideSpy );
 				} );
 
 				it( 'should not close on click inside the panel', () => {
-					balloonPanel.isVisible = true;
-					balloonPanel.element.dispatchEvent( new Event( 'mouseup', { bubbles: true } ) );
+					balloon.view.element.dispatchEvent( new Event( 'mouseup', { bubbles: true } ) );
 
-					sinon.assert.notCalled( hidePanelSpy );
+					sinon.assert.notCalled( hideSpy );
 				} );
 			} );
-		} );
-	} );
-
-	describe( 'working with ImageToolbar', () => {
-		let editor, button, imageToolbarPlugin, plugin;
-
-		beforeEach( () => {
-			const editorElement = global.document.createElement( 'div' );
-			global.document.body.appendChild( editorElement );
-
-			return ClassicTestEditor.create( editorElement, {
-				plugins: [ ImageTextAlternative, Image, ImageToolbar ],
-				image: {
-					toolbar: [ 'imageTextAlternative' ]
-				}
-			} )
-			.then( newEditor => {
-				editor = newEditor;
-				editor.editing.view.attachDomRoot( editorElement );
-				button = newEditor.ui.componentFactory.create( 'imageTextAlternative' );
-				imageToolbarPlugin = newEditor.plugins.get( ImageToolbar );
-				plugin = editor.plugins.get( ImageTextAlternative );
-			} );
-		} );
-
-		afterEach( () => editor.destroy() );
-
-		it( 'should hide ImageToolbar when visible', () => {
-			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
-			const spy = sinon.spy( imageToolbarPlugin, 'hide' );
-			button.fire( 'execute' );
-
-			sinon.assert.calledOnce( spy );
-		} );
-
-		it( 'ImageToolbar should not show when text alternative panel is visible', () => {
-			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
-			button.fire( 'execute' );
-			const spy = sinon.spy( imageToolbarPlugin, 'show' );
-			editor.editing.view.render();
-
-			sinon.assert.notCalled( spy );
-		} );
-
-		it( 'ImageToolbar should show when text alternative panel is not visible', () => {
-			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
-			button.fire( 'execute' );
-			const spy = sinon.spy( imageToolbarPlugin, 'show' );
-			plugin.balloonPanel.isVisible = false;
-
-			sinon.assert.called( spy );
 		} );
 	} );
 } );

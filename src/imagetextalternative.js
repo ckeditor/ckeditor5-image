@@ -12,9 +12,8 @@ import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
 import ImageTextAlternativeEngine from './imagetextalternative/imagetextalternativeengine';
 import escPressHandler from '@ckeditor/ckeditor5-ui/src/bindings/escpresshandler';
 import clickOutsideHandler from '@ckeditor/ckeditor5-ui/src/bindings/clickoutsidehandler';
-import ImageToolbar from './imagetoolbar';
 import TextAlternativeFormView from './imagetextalternative/ui/textalternativeformview';
-import ImageBalloonPanel from './image/ui/imageballoonpanelview';
+import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
 
 import textAlternativeIcon from '@ckeditor/ckeditor5-core/theme/icons/low-vision.svg';
 import '../theme/imagetextalternative/theme.scss';
@@ -29,7 +28,7 @@ export default class ImageTextAlternative extends Plugin {
 	 * @inheritDoc
 	 */
 	static get requires() {
-		return [ ImageTextAlternativeEngine ];
+		return [ ImageTextAlternativeEngine, ContextualBalloon ];
 	}
 
 	/**
@@ -43,23 +42,60 @@ export default class ImageTextAlternative extends Plugin {
 	 * @inheritDoc
 	 */
 	init() {
+		const editor = this.editor;
+
 		this._createButton();
 
-		return this._createBalloonPanel().then( panel => {
-			/**
-			 * Balloon panel containing text alternative change form.
-			 *
-			 * @member {module:image/ui/imageballoonpanel~ImageBalloonPanelView} #baloonPanel
-			 */
-			this.balloonPanel = panel;
+		/**
+		 * Balloon panel containing text alternative form.
+		 *
+		 * @member {module:ui/panel/balloon/contextualballoon~ContextualBalloon}
+		 */
+		this.balloon = editor.plugins.get( ContextualBalloon );
 
-			/**
-			 * Form containing textarea and buttons, used to change `alt` text value.
-			 *
-			 * @member {module:image/imagetextalternative/ui/textalternativeformview~TextAlternativeFormView} #form
-			 */
-			this.form = panel.content.get( 0 );
+		/**
+		 * Form containing textarea and buttons, used to change the `alt` attribute of the image.
+		 *
+		 * @member {module:image/imagetextalternative/ui/textalternativeformview~TextAlternativeFormView}
+		 */
+		this.form = this._createForm();
+
+		// Close on `ESC` press.
+		escPressHandler( {
+			emitter: this.form,
+			activator: () => this.balloon.hasView( this.form ),
+			callback: () => this._hideBalloon()
 		} );
+
+		clickOutsideHandler( {
+			emitter: this.form,
+			activator: () => this.balloon.hasView( this.form ),
+			contextElement: this.balloon.view.element,
+			callback: () => this._hideBalloon()
+		} );
+	}
+
+	/**
+	 * Creates the {@link module:image/imagetextalternative/ui/textalternativeformview~TextAlternativeFormView} instance.
+	 *
+	 * @private
+	 * @returns {module:image/imagetextalternative/ui/textalternativeformview~TextAlternativeFormView} The form instance.
+	 */
+	_createForm() {
+		const editor = this.editor;
+		const form = new TextAlternativeFormView( editor.locale );
+
+		this.listenTo( form, 'submit', () => {
+			editor.execute( 'imageTextAlternative', {
+				newValue: form.labeledInput.inputView.element.value
+			} );
+
+			this._hideBalloon();
+		} );
+
+		this.listenTo( form, 'cancel', () => this._hideBalloon() );
+
+		return form;
 	}
 
 	/**
@@ -84,88 +120,45 @@ export default class ImageTextAlternative extends Plugin {
 
 			view.bind( 'isEnabled' ).to( command, 'isEnabled' );
 
-			this.listenTo( view, 'execute', () => this._showBalloonPanel() );
+			this.listenTo( view, 'execute', () => this._showBalloon() );
 
 			return view;
 		} );
 	}
 
 	/**
-	 * Creates balloon panel.
+	 * Shows the {@link #balloon} containing the {@link #form}.
 	 *
-	 * @private
-	 * @return {Promise.<module:image/image/ui/imageballoonpanel~ImageBalloonPanelView>}
+	 * @protected
+	 * @returns {Promise} A promise returned by
+	 * {@link module:ui/panel/balloon/contextualballoon~ContextualBalloon#add}
 	 */
-	_createBalloonPanel() {
-		const editor = this.editor;
-
-		const panel = new ImageBalloonPanel( editor );
-		const form = new TextAlternativeFormView( editor.locale );
-
-		this.listenTo( form, 'submit', () => {
-			editor.execute( 'imageTextAlternative', { newValue: form.lebeledInput.inputView.element.value } );
-			this._hideBalloonPanel();
-		} );
-
-		// If image toolbar is present - hide it when text alternative balloon is visible.
-		const imageToolbar = editor.plugins.get( ImageToolbar );
-
-		if ( imageToolbar ) {
-			this.listenTo( panel, 'change:isVisible', () => {
-				if ( panel.isVisible ) {
-					imageToolbar.hide();
-					imageToolbar.isEnabled = false;
-				} else {
-					imageToolbar.show();
-					imageToolbar.isEnabled = true;
-				}
-			} );
-		}
-
-		this.listenTo( form, 'cancel', () => this._hideBalloonPanel() );
-
-		// Close on `ESC` press.
-		escPressHandler( {
-			emitter: panel,
-			activator: () => panel.isVisible,
-			callback: () => this._hideBalloonPanel()
-		} );
-
-		// Close on click outside of balloon panel element.
-		clickOutsideHandler( {
-			emitter: panel,
-			activator: () => panel.isVisible,
-			contextElement: panel.element,
-			callback: () => this._hideBalloonPanel()
-		} );
-
-		return Promise.all( [
-			panel.content.add( form ),
-			editor.ui.view.body.add( panel )
-		] ).then( () => panel ) ;
-	}
-
-	/**
-	 * Shows the balloon panel.
-	 *
-	 * @private
-	 */
-	_showBalloonPanel() {
+	_showBalloon() {
 		const editor = this.editor;
 		const command = editor.commands.get( 'imageTextAlternative' );
-		this.form.lebeledInput.value = command.value || '';
-		this.balloonPanel.attach();
-		this.form.lebeledInput.select();
+		const viewDocument = this.editor.editing.view;
+
+		this.form.labeledInput.value = command.value || '';
+
+		return this.balloon.add( {
+			view: this.form,
+			position: {
+				limiter: viewDocument.domConverter.getCorrespondingDomElement( viewDocument.selection.editableElement )
+			}
+		} ).then( () => {
+			this.form.labeledInput.select();
+		} );
 	}
 
 	/**
-	 * Hides the balloon panel.
+	 * Hides the {@link #balloon} containing the {@link #form}.
 	 *
-	 * @private
+	 * @returns {Promise} A promise returned by
+	 * {@link module:ui/panel/balloon/contextualballoon~ContextualBalloon#remove}
 	 */
-	_hideBalloonPanel() {
-		const editor = this.editor;
-		this.balloonPanel.detach();
-		editor.editing.view.focus();
+	_hideBalloon() {
+		this.editor.editing.view.focus();
+
+		return this.balloon.remove( this.form );
 	}
 }
