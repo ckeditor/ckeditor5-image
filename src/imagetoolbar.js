@@ -7,20 +7,31 @@
  * @module image/imagetoolbar
  */
 
+import debounce from '@ckeditor/ckeditor5-utils/src/lib/lodash/debounce';
 import Template from '@ckeditor/ckeditor5-ui/src/template';
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ToolbarView from '@ckeditor/ckeditor5-ui/src/toolbar/toolbarview';
 import { isImageWidget } from './image/utils';
-import ImageBalloonPanel from './image/ui/imageballoonpanelview';
+import BalloonPanelView from '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview';
+import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
 
 /**
- * Image toolbar class. Creates image toolbar placed inside balloon panel that is showed when image widget is selected.
+ * Image toolbar class. Creates an image toolbar placed inside
+ * the {@link module:ui/panel/balloon/contextualballoon~ContextualBalloon} shown when image widget is selected.
+ *
  * Toolbar components are created using editor's {@link module:ui/componentfactory~ComponentFactory ComponentFactory}
  * based on {@link module:core/editor/editor~Editor#config configuration} stored under `image.toolbar`.
  *
  * @extends module:core/plugin~Plugin
  */
 export default class ImageToolbar extends Plugin {
+	/**
+	 * @inheritDoc
+	 */
+	static get requires() {
+		return [ ContextualBalloon ];
+	}
+
 	/**
 	 * @inheritDoc
 	 */
@@ -33,14 +44,6 @@ export default class ImageToolbar extends Plugin {
 	 */
 	constructor( editor ) {
 		super( editor );
-
-		/**
-		 * When set to `true`, toolbar will be repositioned and showed on each render event and focus change.
-		 * Set to `false` to temporary disable the image toolbar.
-		 *
-		 * @member {Boolean}
-		 */
-		this.isEnabled = true;
 	}
 
 	/**
@@ -55,67 +58,161 @@ export default class ImageToolbar extends Plugin {
 			return;
 		}
 
-		const panel = this._panel = new ImageBalloonPanel( editor );
-		const promises = [];
-		const toolbar = new ToolbarView();
+		/**
+		 * A contextual balloon containing the {@link #toolbar}.
+		 *
+		 * @member {module:ui/panel/balloon/contextualballoon~ContextualBalloon}
+		 */
+		this.balloon = editor.plugins.get( ContextualBalloon );
+
+		/**
+		 * A tolbar view with the image–specific buttons.
+		 *
+		 * @member {module:ui/toolbar/toolbarview~ToolbarView}
+		 */
+		this.toolbar = new ToolbarView();
 
 		// Add CSS class to the toolbar.
-		Template.extend( toolbar.template, {
+		Template.extend( this.toolbar.template, {
 			attributes: {
 				class: 'ck-editor-toolbar'
 			}
 		} );
 
-		// Add CSS class to the panel.
-		Template.extend( panel.template, {
-			attributes: {
-				class: [
-					'ck-toolbar-container'
-				]
-			}
-		} );
+		/**
+		 * A debounced version of {@link #_checkVisible} to filter out the noise and reduce
+		 * the number of method calls.
+		 *
+		 * @protected
+		 * @member {Function}
+		 */
+		this._debouncedCheckVisible = debounce( () => {
+			this._checkVisible();
+		}, 50 );
 
-		// Add toolbar to balloon panel.
-		promises.push( panel.content.add( toolbar ) );
+		/**
+		 * Retains a reference to the once selected image to determine whether the selection
+		 * has switched to another image later on. It helps position the {@link #balloon}
+		 * to the right image in the content.
+		 *
+		 * @private
+		 * @member {module:engine/view/element~Element|null}
+		 */
+		this._previousSelectedImage = null;
 
-		// Add buttons to the toolbar.
-		promises.push( toolbar.fillFromConfig( toolbarConfig, editor.ui.componentFactory ) );
-
-		// Add balloon panel to editor's UI.
-		promises.push( editor.ui.view.body.add( panel ) );
-
-		// Show balloon panel each time image widget is selected.
-		this.listenTo( this.editor.editing.view, 'render', () => {
-			if ( this.isEnabled ) {
-				this.show();
-			}
+		this.listenTo( editor.editing.view, 'render', () => {
+			this._debouncedCheckVisible();
 		}, { priority: 'low' } );
 
-		// There is no render method after focus is back in editor, we need to check if balloon panel should be visible.
 		this.listenTo( editor.ui.focusTracker, 'change:isFocused', ( evt, name, is, was ) => {
-			if ( !was && is && this.isEnabled ) {
-				this.show();
+			if ( !was && is ) {
+				this._debouncedCheckVisible();
 			}
 		} );
 
-		return Promise.all( promises );
+		// Add buttons to the toolbar.
+		return this.toolbar.fillFromConfig( toolbarConfig, editor.ui.componentFactory );
 	}
 
 	/**
-	 * Shows the toolbar.
+	 * Shows the toolbar by adding it to the {@link #balloon}.
+	 *
+	 * @returns {Promise} A promise returned by
+	 * {@link module:ui/panel/balloon/contextualballoon~ContextualBalloon#add}
 	 */
 	show() {
-		const selectedElement = this.editor.editing.view.selection.getSelectedElement();
+		if ( !this.balloon.hasView( this.toolbar ) ) {
+			return this.balloon.add( {
+				view: this.toolbar,
+				position: this._getPositionData(),
+				balloonClassName: 'ck-toolbar-container'
+			} );
+		} else {
+			this.balloon.updatePosition( this._getPositionData() );
+		}
 
-		if ( selectedElement && isImageWidget( selectedElement ) ) {
-			this._panel.attach();
+		return Promise.resolve();
+	}
+
+	/**
+	 * Hides the {@link #toolbar} by removing it from the {@link #balloon}.
+	 *
+	 * @returns {Promise} A promise returned by
+	 * {@link module:ui/panel/balloon/contextualballoon~ContextualBalloon#remove}
+	 */
+	hide() {
+		this._previousSelectedImage = null;
+
+		if ( !this.balloon.hasView( this.toolbar ) ) {
+			return Promise.resolve();
+		}
+
+		return this.balloon.remove( this.toolbar );
+	}
+
+	/**
+	 * Upon a call, depending on editor focus state and selection,
+	 * it decides whether to {@link #show} or {@link #hide} the {@link #balloon}
+	 * containing the {@link #toolbar}.
+	 *
+	 * @protected
+	 * @returns {Promise} A promise returned by either {@link #show} or {@link #hide}.
+	 */
+	_checkVisible() {
+		if ( !this.editor.ui.focusTracker.isFocused ) {
+			return this.hide();
+		}
+
+		const selectedImage = this._getSelectedImage();
+
+		if ( selectedImage ) {
+			const isNewImageSelected = ( this._previousSelectedImage && this._previousSelectedImage != selectedImage );
+
+			this._previousSelectedImage = selectedImage;
+
+			if ( isNewImageSelected ) {
+				return this.hide()
+					.then( () => this.show() );
+			} else {
+				return this.show();
+			}
+		} else {
+			return this.hide();
 		}
 	}
 
 	/**
-	 * Hides the toolbar.
+	 * Returns positioning options for the {@link #panel}. They control the way balloon is attached
+	 * to the target element or selection.
+	 *
+	 * @private
+	 * @returns {module:utils/dom/position~Options}
 	 */
-	hide() {
-		this._panel.detach();
+	_getPositionData() {
+		const defaultPositions = BalloonPanelView.defaultPositions;
+		const editingView = this.editor.editing.view;
+		const selectedImage = this._getSelectedImage();
+
+		return {
+			target: editingView.domConverter.getCorrespondingDomElement( selectedImage ),
+			limiter: editingView.domConverter.getCorrespondingDomElement( editingView.selection.editableElement ),
+			positions: [ defaultPositions.northArrowSouth, defaultPositions.southArrowNorth ]
+		};
+	}
+
+	/**
+	 * Returns the image selected in the editor's editing view or `null` when there's none.
+	 *
+	 * @private
+	 * @returns {module:engine/view/element~Element|null}
+	 */
+	_getSelectedImage() {
+		const selectedElement = this.editor.editing.view.selection.getSelectedElement();
+
+		if ( selectedElement && isImageWidget( selectedElement ) ) {
+			return selectedElement;
+		} else {
+			return null;
+		}
 	}
 }
