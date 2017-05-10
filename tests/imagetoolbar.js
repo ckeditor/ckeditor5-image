@@ -35,6 +35,10 @@ describe( 'ImageToolbar', () => {
 			balloon = plugin.balloon;
 			toolbar = plugin.toolbar;
 
+			sinon.stub( balloon, 'add' ).returns( Promise.resolve() );
+			sinon.stub( balloon, 'remove' ).returns( Promise.resolve() );
+			sinon.stub( balloon, 'updatePosition' );
+
 			doc.schema.allow( { name: '$text', inside: '$root' } );
 		} );
 	} );
@@ -104,10 +108,9 @@ describe( 'ImageToolbar', () => {
 	} );
 
 	describe( 'show', () => {
-		let balloonAddSpy, editableElement;
+		let editableElement;
 
 		beforeEach( () => {
-			balloonAddSpy = sinon.spy( balloon, 'add' );
 			editableElement = editingView.domConverter.getCorrespondingDomElement( editingView.selection.editableElement );
 		} );
 
@@ -118,9 +121,7 @@ describe( 'ImageToolbar', () => {
 
 			return plugin.show()
 				.then( () => {
-					expect( balloon.visibleView ).to.equal( toolbar );
-
-					sinon.assert.calledWithExactly( balloonAddSpy, {
+					sinon.assert.calledWithExactly( balloon.add, {
 						view: toolbar,
 						position: {
 							target: editingView.domConverter.getCorrespondingDomElement( editingView.selection.getSelectedElement() ),
@@ -136,15 +137,14 @@ describe( 'ImageToolbar', () => {
 			setData( doc, '[<image src=""></image>]' );
 
 			const defaultPositions = BalloonPanelView.defaultPositions;
-			const updatePositionSpy = sinon.spy( balloon, 'updatePosition' );
 
 			return plugin.show()
 				.then( () => {
-					expect( balloon.visibleView ).to.equal( toolbar );
+					sinon.stub( balloon, 'hasView' ).returns( true );
 
 					return plugin.show()
 						.then( () => {
-							sinon.assert.calledWithExactly( updatePositionSpy, {
+							sinon.assert.calledWithExactly( balloon.updatePosition, {
 								target: editingView.domConverter.getCorrespondingDomElement( editingView.selection.getSelectedElement() ),
 								limiter: editableElement,
 								positions: [ defaultPositions.northArrowSouth, defaultPositions.southArrowNorth ]
@@ -155,10 +155,9 @@ describe( 'ImageToolbar', () => {
 	} );
 
 	describe( 'hide', () => {
-		let balloonRemoveSpy, editableElement;
+		let editableElement;
 
 		beforeEach( () => {
-			balloonRemoveSpy = sinon.spy( balloon, 'remove' );
 			editableElement = editingView.domConverter.getCorrespondingDomElement( editingView.selection.editableElement );
 		} );
 
@@ -167,11 +166,11 @@ describe( 'ImageToolbar', () => {
 
 			return plugin.show()
 				.then( () => {
-					expect( balloon.visibleView ).to.equal( toolbar );
+					sinon.stub( balloon, 'hasView' ).returns( true );
 
 					return plugin.hide()
 						.then( () => {
-							sinon.assert.calledWithExactly( balloonRemoveSpy, toolbar );
+							sinon.assert.calledWithExactly( balloon.remove, toolbar );
 						} );
 				} );
 		} );
@@ -179,7 +178,7 @@ describe( 'ImageToolbar', () => {
 		it( 'does not remove #toolbar from the #balloon, if not previously added', () => {
 			return plugin.hide()
 				.then( () => {
-					sinon.assert.notCalled( balloonRemoveSpy );
+					sinon.assert.notCalled( balloon.remove );
 				} );
 		} );
 	} );
