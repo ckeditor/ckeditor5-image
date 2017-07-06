@@ -142,18 +142,14 @@ describe( 'ImageTextAlternative', () => {
 			} );
 		} );
 
-		it( 'should be in read-only mode when command is disabled', () => {
+		it( 'should be bound to command#isEnabled', () => {
 			command.isEnabled = true;
 
-			expect( form.labeledInput.inputView.isReadOnly ).to.false;
-			expect( form.saveButtonView.isEnabled ).to.true;
-			expect( form.cancelButtonView.isEnabled ).to.true;
+			expect( form.isEnabled ).to.true;
 
 			command.isEnabled = false;
 
-			expect( form.labeledInput.inputView.isReadOnly ).to.true;
-			expect( form.saveButtonView.isEnabled ).to.false;
-			expect( form.cancelButtonView.isEnabled ).to.true;
+			expect( form.isEnabled ).to.false;
 		} );
 
 		describe( 'close listeners', () => {
