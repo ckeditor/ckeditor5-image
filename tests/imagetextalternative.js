@@ -153,7 +153,7 @@ describe( 'ImageTextAlternative', () => {
 
 			expect( form.labeledInput.inputView.isReadOnly ).to.true;
 			expect( form.saveButtonView.isEnabled ).to.false;
-			expect( form.cancelButtonView.isEnabled ).to.false;
+			expect( form.cancelButtonView.isEnabled ).to.true;
 		} );
 
 		describe( 'close listeners', () => {
