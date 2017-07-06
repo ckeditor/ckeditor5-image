@@ -100,6 +100,7 @@ export default class ImageTextAlternative extends Plugin {
 		const panel = new ImageBalloonPanel( editor );
 		const form = new TextAlternativeFormView( editor.locale );
 
+		// Form elements should be read-only when command is disabled.
 		form.labeledInput.inputView.bind( 'isReadOnly' ).to( command, 'isEnabled', value => !value );
 		form.saveButtonView.bind( 'isEnabled' ).to( command );
 
