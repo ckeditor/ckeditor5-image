@@ -58,14 +58,6 @@ describe( 'ImageTextAlternative', () => {
 			expect( button ).to.be.instanceOf( ButtonView );
 		} );
 
-		it( 'should have isEnabled property bind to command\'s isEnabled property', () => {
-			command.isEnabled = true;
-			expect( button.isEnabled ).to.be.true;
-
-			command.isEnabled = false;
-			expect( button.isEnabled ).to.be.false;
-		} );
-
 		it( 'should show balloon panel on execute', () => {
 			const spy = sinon.spy( balloonPanel, 'attach' );
 			setData( editor.document, '[<image src="" alt="foo bar"></image>]' );
@@ -148,6 +140,16 @@ describe( 'ImageTextAlternative', () => {
 
 				sinon.assert.called( spy );
 			} );
+		} );
+
+		it( 'should be bound to command#isEnabled', () => {
+			command.isEnabled = true;
+
+			expect( form.isEnabled ).to.true;
+
+			command.isEnabled = false;
+
+			expect( form.isEnabled ).to.false;
 		} );
 
 		describe( 'close listeners', () => {

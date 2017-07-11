@@ -29,6 +29,13 @@ export default class TextAlternativeFormView extends View {
 		const t = this.locale.t;
 
 		/**
+		 * When form isEnabled then each child component is enabled otherwise components are read-only.
+		 *
+		 * @member {Boolean} #isEnabled
+		 */
+		this.set( 'isEnabled', true );
+
+		/**
 		 * Text area with label.
 		 *
 		 * @member {module:ui/labeledinput/labeledinputview~LabeledInputView} #labeledTextarea
@@ -42,6 +49,7 @@ export default class TextAlternativeFormView extends View {
 		 */
 		this.saveButtonView = this._createButton( t( 'Save' ) );
 		this.saveButtonView.type = 'submit';
+		this.saveButtonView.bind( 'isEnabled' ).to( this );
 
 		/**
 		 * Button used to cancel the form.
@@ -121,7 +129,9 @@ export default class TextAlternativeFormView extends View {
 	_createLabeledInputView() {
 		const t = this.locale.t;
 		const labeledInput = new LabeledInputView( this.locale, InputTextView );
+
 		labeledInput.label = t( 'Text alternative' );
+		labeledInput.inputView.bind( 'isReadOnly' ).to( this, 'isEnabled', value => !value );
 
 		return labeledInput;
 	}

@@ -35,6 +35,20 @@ describe( 'TextAlternativeFormView', () => {
 
 			sinon.assert.calledOnce( spy );
 		} );
+
+		it( 'should switch child components to read-only mode when view is disabled', () => {
+			view.isEnabled = true;
+
+			expect( view.labeledInput.inputView.isReadOnly ).to.false;
+			expect( view.saveButtonView.isEnabled ).to.true;
+			expect( view.cancelButtonView.isEnabled ).to.true;
+
+			view.isEnabled = false;
+
+			expect( view.labeledInput.inputView.isReadOnly ).to.true;
+			expect( view.saveButtonView.isEnabled ).to.false;
+			expect( view.cancelButtonView.isEnabled ).to.true;
+		} );
 	} );
 
 	describe( 'DOM bindings', () => {

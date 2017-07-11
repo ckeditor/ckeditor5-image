@@ -70,7 +70,6 @@ export default class ImageTextAlternative extends Plugin {
 	 */
 	_createButton() {
 		const editor = this.editor;
-		const command = editor.commands.get( 'imageTextAlternative' );
 		const t = editor.t;
 
 		editor.ui.componentFactory.add( 'imageTextAlternative', locale => {
@@ -81,8 +80,6 @@ export default class ImageTextAlternative extends Plugin {
 				icon: textAlternativeIcon,
 				tooltip: true
 			} );
-
-			view.bind( 'isEnabled' ).to( command, 'isEnabled' );
 
 			this.listenTo( view, 'execute', () => this._showBalloonPanel() );
 
@@ -98,9 +95,13 @@ export default class ImageTextAlternative extends Plugin {
 	 */
 	_createBalloonPanel() {
 		const editor = this.editor;
+		const command = editor.commands.get( 'imageTextAlternative' );
 
 		const panel = new ImageBalloonPanel( editor );
 		const form = new TextAlternativeFormView( editor.locale );
+
+		// Form should be read-only when command is disabled.
+		form.bind( 'isEnabled' ).to( command );
 
 		this.listenTo( form, 'submit', () => {
 			editor.execute( 'imageTextAlternative', { newValue: form.labeledInput.inputView.element.value } );
