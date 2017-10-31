@@ -9,6 +9,11 @@
 
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import buildModelConverter from '@ckeditor/ckeditor5-engine/src/conversion/buildmodelconverter';
+import {
+	buildModelConverter as buildConverter,
+	elementToElement,
+	attributeToChildElementAttribute
+} from '@ckeditor/ckeditor5-engine/src/conversion/modelconversionutils';
 import buildViewConverter from '@ckeditor/ckeditor5-engine/src/conversion/buildviewconverter';
 import {
 	viewFigureToModel,
@@ -47,18 +52,20 @@ export default class ImageEngine extends Plugin {
 		schema.allow( { name: 'image', attributes: [ 'alt', 'src', 'srcset' ], inside: '$root' } );
 		schema.objects.add( 'image' );
 
-		// Build converter from model to view for data pipeline.
-		buildModelConverter().for( data.modelToView )
-			.fromElement( 'image' )
-			.toElement( () => createImageViewElement() );
+		// Build converter for data pipeline: "image" element to <figure><img /></figure>.
+		buildConverter()
+			.for( data.modelToView )
+			.use( elementToElement( 'image', () => createImageViewElement() ) );
 
-		// Build converter from model to view for editing pipeline.
-		buildModelConverter().for( editing.modelToView )
-			.fromElement( 'image' )
-			.toElement( () => toImageWidget( createImageViewElement(), t( 'image widget' ) ) );
+		// Build converter for data pipeline: "image" element to <figure><img /></figure> as widget.
+		buildConverter()
+			.for( editing.modelToView )
+			.use( elementToElement( 'image', () => toImageWidget( createImageViewElement(), t( 'image widget' ) ) ) );
 
-		createImageAttributeConverter( [ editing.modelToView, data.modelToView ], 'src' );
-		createImageAttributeConverter( [ editing.modelToView, data.modelToView ], 'alt' );
+		buildConverter()
+			.for( editing.modelToView, data.modelToView )
+			.use( attributeToChildElementAttribute( 'image', 'src', 'img' ) )
+			.use( attributeToChildElementAttribute( 'image', 'alt', 'img' ) );
 
 		// Convert `srcset` attribute changes and add or remove `sizes` attribute when necessary.
 		createImageAttributeConverter( [ editing.modelToView, data.modelToView ], 'srcset', srcsetAttributeConverter );
