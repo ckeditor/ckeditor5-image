@@ -8,20 +8,20 @@
  */
 
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import buildModelConverter from '@ckeditor/ckeditor5-engine/src/conversion/buildmodelconverter';
 import {
-	buildModelConverter as buildConverter,
+	buildModelConverter,
 	elementToElement,
 	attributeToChildElementAttribute
-} from '@ckeditor/ckeditor5-engine/src/conversion/modelconversionutils';
+} from '../conversionutils/modelconversionutils';
+
 import buildViewConverter from '@ckeditor/ckeditor5-engine/src/conversion/buildviewconverter';
+
 import {
 	viewFigureToModel,
-	createImageAttributeConverter,
 	convertHoistableImage,
-	hoistImageThroughElement,
-	srcsetAttributeConverter
+	hoistImageThroughElement
 } from './converters';
+
 import { toImageWidget } from './utils';
 import ModelElement from '@ckeditor/ckeditor5-engine/src/model/element';
 import ViewContainerElement from '@ckeditor/ckeditor5-engine/src/view/containerelement';
@@ -53,22 +53,21 @@ export default class ImageEngine extends Plugin {
 		schema.objects.add( 'image' );
 
 		// Build converter for data pipeline: "image" element to <figure><img /></figure>.
-		buildConverter()
+		buildModelConverter()
 			.for( data.modelToView )
+			// TODO: accept just a function name.
 			.use( elementToElement( 'image', () => createImageViewElement() ) );
 
 		// Build converter for data pipeline: "image" element to <figure><img /></figure> as widget.
-		buildConverter()
+		buildModelConverter()
 			.for( editing.modelToView )
 			.use( elementToElement( 'image', () => toImageWidget( createImageViewElement(), t( 'image widget' ) ) ) );
 
-		buildConverter()
+		buildModelConverter()
 			.for( editing.modelToView, data.modelToView )
 			.use( attributeToChildElementAttribute( 'image', 'src', 'img' ) )
-			.use( attributeToChildElementAttribute( 'image', 'alt', 'img' ) );
-
-		// Convert `srcset` attribute changes and add or remove `sizes` attribute when necessary.
-		createImageAttributeConverter( [ editing.modelToView, data.modelToView ], 'srcset', srcsetAttributeConverter );
+			.use( attributeToChildElementAttribute( 'image', 'alt', 'img' ) )
+			.use( attributeToChildElementAttribute( 'image', 'srcset', 'img', setSrcsetAttirbute ) );
 
 		// Build converter for view img element to model image element.
 		buildViewConverter().for( data.viewToModel )
@@ -121,3 +120,30 @@ export default class ImageEngine extends Plugin {
 export function createImageViewElement() {
 	return new ViewContainerElement( 'figure', { class: 'image' }, new ViewEmptyElement( 'img' ) );
 }
+
+function setSrcsetAttirbute( type, img, data ) {
+	if ( type == 'removeAttribute' ) {
+		const srcset = data.attributeOldValue;
+
+		if ( srcset.data ) {
+			img.removeAttribute( 'srcset' );
+			img.removeAttribute( 'sizes' );
+
+			if ( srcset.width ) {
+				img.removeAttribute( 'width' );
+			}
+		}
+	} else {
+		const srcset = data.attributeNewValue;
+
+		if ( srcset.data ) {
+			img.setAttribute( 'srcset', srcset.data );
+			// Always outputting `100vw`. See https://github.com/ckeditor/ckeditor5-image/issues/2.
+			img.setAttribute( 'sizes', '100vw' );
+
+			if ( srcset.width ) {
+				img.setAttribute( 'width', srcset.width );
+			}
+		}
+	}
+};

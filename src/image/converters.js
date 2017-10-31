@@ -80,52 +80,6 @@ export function createImageAttributeConverter( dispatchers, attributeName, conve
 	}
 }
 
-/**
- * Converter used to convert `srcset` model image's attribute to `srcset`, `sizes` and `width` attributes in the view.
- *
- * @return {Function}
- */
-export function srcsetAttributeConverter() {
-	return ( evt, data, consumable, conversionApi ) => {
-		const parts = evt.name.split( ':' );
-		const consumableType = parts[ 0 ] + ':' + parts[ 1 ];
-		const modelImage = data.item;
-
-		if ( !consumable.consume( modelImage, consumableType ) ) {
-			return;
-		}
-
-		const figure = conversionApi.mapper.toViewElement( modelImage );
-		const img = figure.getChild( 0 );
-		const type = parts[ 0 ];
-
-		if ( type == 'removeAttribute' ) {
-			const srcset = data.attributeOldValue;
-
-			if ( srcset.data ) {
-				img.removeAttribute( 'srcset' );
-				img.removeAttribute( 'sizes' );
-
-				if ( srcset.width ) {
-					img.removeAttribute( 'width' );
-				}
-			}
-		} else {
-			const srcset = data.attributeNewValue;
-
-			if ( srcset.data ) {
-				img.setAttribute( 'srcset', srcset.data );
-				// Always outputting `100vw`. See https://github.com/ckeditor/ckeditor5-image/issues/2.
-				img.setAttribute( 'sizes', '100vw' );
-
-				if ( srcset.width ) {
-					img.setAttribute( 'width', srcset.width );
-				}
-			}
-		}
-	};
-}
-
 // Returns model to view image converter converting given attribute, and adding it to `img` element nested inside `figure` element.
 //
 // @private

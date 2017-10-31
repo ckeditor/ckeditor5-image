@@ -23,6 +23,12 @@ import {
 	matchImageCaption
 } from './utils';
 
+import {
+	buildModelConverter,
+	elementToElement,
+	attributeToChildElementAttribute
+} from '../conversionutils/modelconversionutils';
+
 /**
  * The image caption engine plugin.
  *
@@ -75,8 +81,14 @@ export default class ImageCaptionEngine extends Plugin {
 			.from( matchImageCaption )
 			.toElement( 'caption' );
 
+		buildModelConverter()
+			.for( data.modelToView )
+			.use( elementToElement( 'caption', 'figcaption', {
+				filter: element => isImage( element.parent )
+			} ) );
+
 		// Model to view converter for the data pipeline.
-		data.modelToView.on( 'insert:caption', captionModelToView( new ViewContainerElement( 'figcaption' ), false ) );
+		// data.modelToView.on( 'insert:caption', captionModelToView( new ViewContainerElement( 'figcaption' ), false ) );
 
 		// Model to view converter for the editing pipeline.
 		editing.modelToView.on( 'insert:caption', captionModelToView( this._createCaption ) );
