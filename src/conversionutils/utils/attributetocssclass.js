@@ -28,7 +28,6 @@ function toCssClass( attributeToClass ) {
 
 		const viewElement = conversionApi.mapper.toViewElement( data.item );
 
-		// TODO: allow group of classes to be toggled.
 		const newClass = attributeToClass( data.attributeNewValue );
 		const oldClass = attributeToClass( data.attributeOldValue );
 
@@ -52,7 +51,8 @@ function toCssClass( attributeToClass ) {
 // @returns {Boolean} Whether the change was handled.
 function handleRemoval( eventType, cssClass, viewElement ) {
 	if ( cssClass && ( eventType == 'changeAttribute' || eventType == 'removeAttribute' ) ) {
-		viewElement.removeClass( cssClass );
+		const classes = Array.isArray( cssClass ) ? cssClass : [ cssClass ];
+		viewElement.removeClass( ...classes );
 
 		return true;
 	}
