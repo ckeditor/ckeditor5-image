@@ -18,8 +18,8 @@ import leftIcon from '@ckeditor/ckeditor5-core/theme/icons/object-left.svg';
 import centerIcon from '@ckeditor/ckeditor5-core/theme/icons/object-center.svg';
 import rightIcon from '@ckeditor/ckeditor5-core/theme/icons/object-right.svg';
 
-import { buildModelConverter } from '../conversionutils/modelconversionutils';
-import attributeToCssClass from '../conversionutils/attributetocssclass';
+import buildModelConverter from '../conversionutils/buildmodelconverter';
+import attributeToCssClass from '../conversionutils/utils/attributetocssclass';
 
 /**
  * The image style engine plugin. It sets the default configuration, creates converters and registers

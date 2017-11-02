@@ -20,11 +20,8 @@ import {
 	matchImageCaption
 } from './utils';
 
-import {
-	buildModelConverter,
-	elementToElement,
-	attributeToChildElementAttribute
-} from '../conversionutils/modelconversionutils';
+import buildModelConverter from '../conversionutils/buildmodelconverter';
+import elementToElement from '../conversionutils/utils/elementtoelement';
 
 /**
  * The image caption engine plugin.

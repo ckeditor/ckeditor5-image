@@ -8,11 +8,10 @@
  */
 
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import {
-	buildModelConverter,
-	elementToElement,
-	attributeToChildElementAttribute
-} from '../conversionutils/modelconversionutils';
+
+import buildModelConverter from '../conversionutils/buildmodelconverter';
+import elementToElement from '../conversionutils/utils/elementtoelement';
+import attributeToChildElementAttribute from '../conversionutils/utils/attributetochildelementattribute';
 
 import buildViewConverter from '@ckeditor/ckeditor5-engine/src/conversion/buildviewconverter';
 

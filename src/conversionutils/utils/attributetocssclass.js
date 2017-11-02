@@ -5,6 +5,7 @@
 
 import { eventNameToConsumableType } from '@ckeditor/ckeditor5-engine/src/conversion/model-to-view-converters';
 
+// TODO: pass elementName attribute and convert it on every attribute.
 export default function attributeToCssClass( elementName, attributeName, attributeToClass, options ) {
 	options = Object.assign( {}, { priority: 'normal' }, options );
 	const converter = toCssClass( attributeToClass );
@@ -26,6 +27,8 @@ function toCssClass( attributeToClass ) {
 		}
 
 		const viewElement = conversionApi.mapper.toViewElement( data.item );
+
+		// TODO: allow group of classes to be toggled.
 		const newClass = attributeToClass( data.attributeNewValue );
 		const oldClass = attributeToClass( data.attributeOldValue );
 
@@ -39,6 +42,7 @@ function toCssClass( attributeToClass ) {
 	};
 }
 
+// TODO: Fix docs.
 // Handles converting removal of the attribute.
 // Returns `true` when handling was processed correctly and further conversion can be performed.
 //
