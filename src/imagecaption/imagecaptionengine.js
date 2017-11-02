@@ -10,9 +10,6 @@
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ModelTreeWalker from '@ckeditor/ckeditor5-engine/src/model/treewalker';
 import ModelElement from '@ckeditor/ckeditor5-engine/src/model/element';
-import ViewContainerElement from '@ckeditor/ckeditor5-engine/src/view/containerelement';
-import ViewElement from '@ckeditor/ckeditor5-engine/src/view/element';
-import viewWriter from '@ckeditor/ckeditor5-engine/src/view/writer';
 import ModelPosition from '@ckeditor/ckeditor5-engine/src/model/position';
 import ViewPosition from '@ckeditor/ckeditor5-engine/src/view/position';
 import buildViewConverter from '@ckeditor/ckeditor5-engine/src/conversion/buildviewconverter';
@@ -84,14 +81,22 @@ export default class ImageCaptionEngine extends Plugin {
 		buildModelConverter()
 			.for( data.modelToView )
 			.use( elementToElement( 'caption', 'figcaption', {
-				filter: element => isImage( element.parent )
+				// Convert only non-empty captions from images.
+				filter: element => isImage( element.parent ) && element.childCount,
+
+				// Alter insertion position to insert figcaption at the end of the parent figure.
+				insertPosition: viewPosition => ViewPosition.createAt( viewPosition.parent, 'end' )
 			} ) );
 
-		// Model to view converter for the data pipeline.
-		// data.modelToView.on( 'insert:caption', captionModelToView( new ViewContainerElement( 'figcaption' ), false ) );
+		buildModelConverter()
+			.for( editing.modelToView )
+			.use( elementToElement( 'caption', this._createCaption, {
+				// Convert only captions of images.
+				filter: element => isImage( element.parent ),
 
-		// Model to view converter for the editing pipeline.
-		editing.modelToView.on( 'insert:caption', captionModelToView( this._createCaption ) );
+				// Alter insertion position to insert figcaption at the end of the parent figure.
+				insertPosition: viewPosition => ViewPosition.createAt( viewPosition.parent, 'end' )
+			} ) );
 
 		// Always show caption in view when something is inserted in model.
 		editing.modelToView.on( 'insert', ( evt, data ) => this._fixCaptionVisibility( data.item ), { priority: 'high' } );
@@ -193,54 +198,6 @@ function insertMissingModelCaptionElement( evt, changeType, data, batch ) {
 			} );
 		}
 	}
-}
-// Creates a converter that converts image caption model element to view element.
-//
-// @private
-// @param {Function|module:engine/view/element~Element} elementCreator
-// @param {Boolean} [hide=true] When set to `false` view element will not be inserted when it's empty.
-// @return {Function}
-function captionModelToView( elementCreator, hide = true ) {
-	return ( evt, data, consumable, conversionApi ) => {
-		const captionElement = data.item;
-
-		// Return if element shouldn't be present when empty.
-		if ( !captionElement.childCount && !hide ) {
-			return;
-		}
-
-		if ( isImage( captionElement.parent ) ) {
-			if ( !consumable.consume( data.item, 'insert' ) ) {
-				return;
-			}
-
-			const viewImage = conversionApi.mapper.toViewElement( data.range.start.parent );
-			const viewCaption = ( elementCreator instanceof ViewElement ) ?
-				elementCreator.clone( true ) :
-				elementCreator();
-
-			// Hide if empty.
-			if ( !captionElement.childCount ) {
-				viewCaption.addClass( 'ck-hidden' );
-			}
-
-			insertViewCaptionAndBind( viewCaption, data.item, viewImage, conversionApi.mapper );
-		}
-	};
-}
-
-// Inserts `viewCaption` at the end of `viewImage` and binds it to `modelCaption`.
-//
-// @private
-// @param {module:engine/view/containerelement~ContainerElement} viewCaption
-// @param {module:engine/model/element~Element} modelCaption
-// @param {module:engine/view/containerelement~ContainerElement} viewImage
-// @param {module:engine/conversion/mapper~Mapper} mapper
-function insertViewCaptionAndBind( viewCaption, modelCaption, viewImage, mapper ) {
-	const viewPosition = ViewPosition.createAt( viewImage, 'end' );
-
-	viewWriter.insert( viewPosition, viewCaption );
-	mapper.bindElements( modelCaption, viewCaption );
 }
 
 /**

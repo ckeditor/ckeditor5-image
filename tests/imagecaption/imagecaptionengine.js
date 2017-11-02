@@ -132,7 +132,7 @@ describe( 'ImageCaptionEngine', () => {
 					'<p>foo</p>' +
 					'<figure class="image ck-widget" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-placeholder ck-editable ck-hidden" ' +
+						'<figcaption class="ck-placeholder ck-hidden ck-editable" ' +
 							'contenteditable="true" data-placeholder="Enter image caption">' +
 						'</figcaption>' +
 					'</figure>'
@@ -346,7 +346,7 @@ describe( 'ImageCaptionEngine', () => {
 				'<p>{}foo</p>' +
 				'<figure class="image ck-widget" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-placeholder ck-editable ck-hidden" ' +
+					'<figcaption class="ck-placeholder ck-hidden ck-editable" ' +
 						'contenteditable="true" data-placeholder="Enter image caption">' +
 					'</figcaption>' +
 				'</figure>'

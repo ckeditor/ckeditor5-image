@@ -46,47 +46,19 @@ export function buildModelConverter() {
 }
 
 export function elementToElement( modelElementName, viewElement, options = {} ) {
-	options = Object.assign({}, { priority: 'normal' }, options );
+	options = Object.assign({}, { priority: 'normal', insertAtStart: true }, options );
 	viewElement = typeof viewElement == 'string' ? new ViewContainerElement( viewElement ) : viewElement;
 
 	return dispatcher => {
-		dispatcher.on( 'insert:' + modelElementName, insertElement( viewElement, options.filter ), { priority: options.priority } );
+		dispatcher.on( 'insert:' + modelElementName, insertElement( viewElement, options ), { priority: options.priority } );
 	}
 }
 
-/**
- * Function factory, creates a converter that converts node insertion changes from the model to the view.
- * The view element that will be added to the view depends on passed parameter. If {@link module:engine/view/element~Element} was passed,
- * it will be cloned and the copy will be inserted. If `Function` is provided, it is passed all the parameters of the
- * dispatcher's {@link module:engine/conversion/modelconversiondispatcher~ModelConversionDispatcher#event:insert insert event}.
- * It's expected that the function returns a {@link module:engine/view/element~Element}.
- * The result of the function will be inserted to the view.
- *
- * The converter automatically consumes corresponding value from consumables list, stops the event (see
- * {@link module:engine/conversion/modelconversiondispatcher~ModelConversionDispatcher}) and bind model and view elements.
- *
- *		modelDispatcher.on( 'insert:paragraph', insertElement( new ViewElement( 'p' ) ) );
- *
- *		modelDispatcher.on(
- *			'insert:myElem',
- *			insertElement( ( data, consumable, conversionApi ) => {
- *				let myElem = new ViewElement( 'myElem', { myAttr: true }, new ViewText( 'myText' ) );
- *
- *				// Do something fancy with myElem using data/consumable/conversionApi ...
- *
- *				return myElem;
- *			}
- *		) );
- *
- * @param {module:engine/view/element~Element|Function} elementCreator View element, or function returning a view element, which
- * will be inserted.
- * @returns {Function} Insert element event converter.
- */
-export function insertElement( elementCreator, modelElementFilter ) {
+export function insertElement( elementCreator, options ) {
 	return ( evt, data, consumable, conversionApi ) => {
 		const modelElement = data.item;
 
-		if ( modelElementFilter && !modelElementFilter( modelElement ) ) {
+		if ( options.filter && !options.filter( modelElement ) ) {
 			return;
 		}
 
@@ -102,7 +74,12 @@ export function insertElement( elementCreator, modelElementFilter ) {
 			return;
 		}
 
-		const viewPosition = conversionApi.mapper.toViewPosition( data.range.start );
+		const modelPosition = data.range.start;
+		let viewPosition = conversionApi.mapper.toViewPosition( modelPosition );
+
+		if ( options.insertPosition ) {
+			viewPosition = options.insertPosition( viewPosition )
+		}
 
 		conversionApi.mapper.bindElements( modelElement, viewElement );
 		viewWriter.insert( viewPosition, viewElement );

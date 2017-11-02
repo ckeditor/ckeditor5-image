@@ -22,11 +22,16 @@ const captionSymbol = Symbol( 'imageCaption' );
  * @return {Function}
  */
 export function captionElementCreator( viewDocument, placeholderText ) {
-	return () => {
+	return ( data ) => {
 		const editable = new ViewEditableElement( 'figcaption' );
 		editable.document = viewDocument;
 		editable.setCustomProperty( captionSymbol, true );
 		attachPlaceholder( editable, placeholderText );
+
+		// Hide if empty.
+		if ( !data.item.childCount ) {
+			editable.addClass( 'ck-hidden' );
+		}
 
 		return toWidgetEditable( editable );
 	};

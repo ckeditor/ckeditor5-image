@@ -20,7 +20,7 @@ describe( 'image captioning utils', () => {
 	beforeEach( () => {
 		document = new ViewDocument();
 		const creator = captionElementCreator( document, 'placeholder text' );
-		element = creator();
+		element = creator( { item: new ModelElement() } );
 	} );
 
 	describe( 'captionElementCreator', () => {
