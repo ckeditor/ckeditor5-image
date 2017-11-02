@@ -88,9 +88,44 @@ export function insertElement( elementCreator, options ) {
 
 export function attributeToChildElementAttribute( modelElement, modelAttribute, viewChildElement, customFn ) {
 	return dispatcher => {
+		// TODO: priority
 		dispatcher.on( `addAttribute:${ modelAttribute }:${ modelElement }`, modelToViewChildAttributeConverter( viewChildElement, customFn ) );
 		dispatcher.on( `changeAttribute:${ modelAttribute }:${ modelElement }`, modelToViewChildAttributeConverter( viewChildElement, customFn ) );
 		dispatcher.on( `removeAttribute:${ modelAttribute }:${ modelElement }`, modelToViewChildAttributeConverter( viewChildElement, customFn ) );
+	};
+}
+
+export function attributeToAttribute( elementName, attributeName, options ) {
+	options = Object.assign({}, { priority: 'normal' }, options );
+
+	return dispatcher => {
+		dispatcher.on( `addAttribute:${ attributeName }:${ elementName }`, updateAttribute(), { priority: options.priority } );
+		dispatcher.on( `changeAttribute:${ attributeName }:${ elementName }`, updateAttribute(), { priority: options.priority } );
+		dispatcher.on( `removeAttribute:${ attributeName }:${ elementName }`, updateAttribute(), { priority: options.priority } );
+	};
+}
+
+export function updateAttribute( attributeCreator ) {
+	attributeCreator = attributeCreator || ( ( value, key ) => ( { value, key } ) );
+
+	return ( evt, data, consumable, conversionApi ) => {
+		const parts = evt.name.split( ':' );
+
+		if ( !consumable.consume( data.item, eventNameToConsumableType( evt.name ) ) ) {
+			return;
+		}
+
+
+		const viewElement = conversionApi.mapper.toViewElement( data.item );
+		const type = parts[ 0 ];
+
+		if ( type === 'removeAttribute' ) {
+			const { key, value } = attributeCreator( data.attributeNewValue, data.attributeKey, data, consumable, conversionApi );
+			viewElement.setAttribute( key, value );
+		} else {
+			const { key } = attributeCreator( data.attributeOldValue, data.attributeKey, data, consumable, conversionApi );
+			viewElement.removeAttribute( key );
+		}
 	};
 }
 

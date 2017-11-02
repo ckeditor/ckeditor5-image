@@ -10,13 +10,16 @@
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ImageStyleCommand from './imagestylecommand';
 import ImageEngine from '../image/imageengine';
-import { viewToModelStyleAttribute, modelToViewStyleAttribute } from './converters';
+import { viewToModelStyleAttribute, getStyleByName } from './converters';
 import log from '@ckeditor/ckeditor5-utils/src/log';
 
 import fullWidthIcon from '@ckeditor/ckeditor5-core/theme/icons/object-full-width.svg';
 import leftIcon from '@ckeditor/ckeditor5-core/theme/icons/object-left.svg';
 import centerIcon from '@ckeditor/ckeditor5-core/theme/icons/object-center.svg';
 import rightIcon from '@ckeditor/ckeditor5-core/theme/icons/object-right.svg';
+
+import { buildModelConverter } from '../conversionutils/modelconversionutils';
+import attributeToCssClass from '../conversionutils/attributetocssclass';
 
 /**
  * The image style engine plugin. It sets the default configuration, creates converters and registers
@@ -59,14 +62,15 @@ export default class ImageStyleEngine extends Plugin {
 		// We could call it 'style' but https://github.com/ckeditor/ckeditor5-engine/issues/559.
 		schema.allow( { name: 'image', attributes: 'imageStyle', inside: '$root' } );
 
-		// Converters for imageStyle attribute from model to view.
-		const modelToViewConverter = modelToViewStyleAttribute( styles );
-		editing.modelToView.on( 'addAttribute:imageStyle:image', modelToViewConverter );
-		data.modelToView.on( 'addAttribute:imageStyle:image', modelToViewConverter );
-		editing.modelToView.on( 'changeAttribute:imageStyle:image', modelToViewConverter );
-		data.modelToView.on( 'changeAttribute:imageStyle:image', modelToViewConverter );
-		editing.modelToView.on( 'removeAttribute:imageStyle:image', modelToViewConverter );
-		data.modelToView.on( 'removeAttribute:imageStyle:image', modelToViewConverter );
+		buildModelConverter()
+			.for( editing.modelToView, data.modelToView )
+			.use( attributeToCssClass( 'image', 'imageStyle', attribute => {
+				const style = getStyleByName( attribute, styles );
+
+				if ( style ) {
+					return style.className;
+				}
+			} ) );
 
 		// Converter for figure element from view to model.
 		data.viewToModel.on( 'element:figure', viewToModelStyleAttribute( styles ), { priority: 'low' } );
