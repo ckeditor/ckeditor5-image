@@ -8,12 +8,12 @@ import ViewElement from '@ckeditor/ckeditor5-engine/src/view/element';
 import viewWriter from '@ckeditor/ckeditor5-engine/src/view/writer';
 
 export default function elementToElement( modelElementName, viewElement, options = {} ) {
-	options = Object.assign({}, { priority: 'normal', insertAtStart: true }, options );
+	options = Object.assign( {}, { priority: 'normal', insertAtStart: true }, options );
 	viewElement = typeof viewElement == 'string' ? new ViewContainerElement( viewElement ) : viewElement;
 
 	return dispatcher => {
 		dispatcher.on( 'insert:' + modelElementName, insertElement( viewElement, options ), { priority: options.priority } );
-	}
+	};
 }
 
 function insertElement( elementCreator, options ) {
@@ -41,7 +41,7 @@ function insertElement( elementCreator, options ) {
 
 		// When present - use options.insertPosition function to alter insertion position.
 		if ( options.insertPosition ) {
-			viewPosition = options.insertPosition( viewPosition )
+			viewPosition = options.insertPosition( viewPosition );
 		}
 
 		conversionApi.mapper.bindElements( modelElement, viewElement );

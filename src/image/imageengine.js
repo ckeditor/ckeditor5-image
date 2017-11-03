@@ -145,4 +145,4 @@ function setSrcsetAttirbute( type, img, data ) {
 			}
 		}
 	}
-};
+}

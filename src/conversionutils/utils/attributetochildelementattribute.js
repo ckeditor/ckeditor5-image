@@ -5,10 +5,10 @@
 
 export default function attributeToChildElementAttribute( modelElement, modelAttribute, viewChildElement, customFn ) {
 	return dispatcher => {
-		// TODO: priority
-		dispatcher.on( `addAttribute:${ modelAttribute }:${ modelElement }`, modelToViewChildAttributeConverter( viewChildElement, customFn ) );
-		dispatcher.on( `changeAttribute:${ modelAttribute }:${ modelElement }`, modelToViewChildAttributeConverter( viewChildElement, customFn ) );
-		dispatcher.on( `removeAttribute:${ modelAttribute }:${ modelElement }`, modelToViewChildAttributeConverter( viewChildElement, customFn ) );
+		const converter = modelToViewChildAttributeConverter( viewChildElement, customFn );
+		dispatcher.on( `addAttribute:${ modelAttribute }:${ modelElement }`, converter );
+		dispatcher.on( `changeAttribute:${ modelAttribute }:${ modelElement }`, converter );
+		dispatcher.on( `removeAttribute:${ modelAttribute }:${ modelElement }`, converter );
 	};
 }
 

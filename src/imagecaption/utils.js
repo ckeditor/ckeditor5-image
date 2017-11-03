@@ -22,7 +22,7 @@ const captionSymbol = Symbol( 'imageCaption' );
  * @return {Function}
  */
 export function captionElementCreator( viewDocument, placeholderText ) {
-	return ( data ) => {
+	return data => {
 		const editable = new ViewEditableElement( 'figcaption' );
 		editable.document = viewDocument;
 		editable.setCustomProperty( captionSymbol, true );

@@ -16,7 +16,7 @@ class ModelConverterBuilder {
 	}
 
 	use( utilityFn ) {
-		for( const dispatcher of this._dispatchers ) {
+		for ( const dispatcher of this._dispatchers ) {
 			utilityFn( dispatcher );
 		}
 
