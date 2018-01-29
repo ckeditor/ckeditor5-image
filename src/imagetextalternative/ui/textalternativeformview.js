@@ -115,7 +115,7 @@ export default class TextAlternativeFormView extends View {
 
 			attributes: {
 				class: [
-					'cke-text-alternative-form',
+					'ck-text-alternative-form',
 				],
 
 				// https://github.com/ckeditor/ckeditor5-image/issues/40
@@ -129,7 +129,7 @@ export default class TextAlternativeFormView extends View {
 
 					attributes: {
 						class: [
-							'cke-text-alternative-form__actions'
+							'ck-text-alternative-form__actions'
 						]
 					},
 
