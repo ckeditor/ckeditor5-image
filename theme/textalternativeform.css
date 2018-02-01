@@ -3,11 +3,11 @@
  * For licensing, see LICENSE.md.
  */
 
-.cke-text-alternative-form {
+.ck-text-alternative-form {
 	overflow: hidden;
 }
 
-.cke-text-alternative-form__actions {
+.ck-text-alternative-form__actions {
 	clear: both;
 
 	& .ck-button {
