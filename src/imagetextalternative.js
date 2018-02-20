@@ -123,13 +123,14 @@ export default class ImageTextAlternative extends Plugin {
 		} );
 
 		// Reposition the balloon or hide the form if an image widget is no longer selected.
+		// Use 'low' priority to update position after view is rendered to the DOM.
 		this.listenTo( view, 'render', () => {
 			if ( !isImageWidgetSelected( viewDocument.selection ) ) {
 				this._hideForm( true );
 			} else if ( this._isVisible ) {
 				repositionContextualBalloon( editor );
 			}
-		} );
+		}, { priority: 'low' } );
 
 		// Close on click outside of balloon panel element.
 		clickOutsideHandler( {

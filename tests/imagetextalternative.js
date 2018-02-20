@@ -14,6 +14,7 @@ import View from '@ckeditor/ckeditor5-ui/src/view';
 import global from '@ckeditor/ckeditor5-utils/src/dom/global';
 import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
 import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
+import priorities from '@ckeditor/ckeditor5-utils/src/priorities';
 
 describe( 'ImageTextAlternative', () => {
 	let editor, model, view, doc, plugin, command, form, balloon, editorElement, button;
@@ -168,6 +169,21 @@ describe( 'ImageTextAlternative', () => {
 
 				view.fire( 'render' );
 				sinon.assert.calledOnce( spy );
+			} );
+
+			it( 'should re-position the form after rendering to the DOM', () => {
+				setData( model, '[<image src=""></image>]' );
+				button.fire( 'execute' );
+
+				const spyBefore = sinon.spy();
+				const spy = sinon.spy( balloon, 'updatePosition' );
+				const spyAfter = sinon.spy();
+
+				view.on( 'render', spyBefore, { priority: priorities.get( 'low' ) + 1 } );
+				view.on( 'render', spyAfter, { priority: 'low' } );
+				view.fire( 'render' );
+
+				sinon.assert.callOrder( spyBefore, spy, spyAfter );
 			} );
 
 			it( 'should hide the form and focus editable when image widget has been removed by external change', () => {
