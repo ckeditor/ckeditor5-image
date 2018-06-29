@@ -11,6 +11,7 @@ import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
 import Autoformat from '@ckeditor/ckeditor5-autoformat/src/autoformat';
 import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
 import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
+import Code from '@ckeditor/ckeditor5-basic-styles/src/code';
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
 import Image from '../../src/image';
 import ImageStyle from '../../src/imagestyle';
@@ -180,7 +181,8 @@ ClassicEditor
 			Italic,
 			Link,
 			List,
-			Paragraph
+			Paragraph,
+			Code
 		],
 		removePlugins: [ 'Bold' ],
 		toolbar: [
