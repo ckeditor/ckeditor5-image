@@ -53,7 +53,7 @@ describe( 'ImageToolbar integration', () => {
 			return newEditor.destroy();
 		} );
 
-		it( 'should prevent the BalloonToolbar from being displayed when an image is selected', () => {
+		it( 'should not prevent the BalloonToolbar from being displayed when there is more selected than an image', () => {
 			// When image is selected along with text.
 			setModelData( newEditor.model, '<paragraph>fo[o</paragraph><image alt="alt text" src="foo.png"></image>]' );
 
@@ -61,7 +61,9 @@ describe( 'ImageToolbar integration', () => {
 
 			// BalloonToolbar should be visible.
 			expect( balloon.visibleView ).to.equal( balloonToolbar.toolbarView );
+		} );
 
+		it( 'should prevent the BalloonToolbar from being displayed when an image is selected', () => {
 			// When only image is selected.
 			setModelData( newEditor.model, '<paragraph>foo</paragraph>[<image alt="alt text" src="foo.png"></image>]' );
 
