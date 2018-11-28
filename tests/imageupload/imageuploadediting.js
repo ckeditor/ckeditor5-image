@@ -69,7 +69,7 @@ describe( 'ImageUploadEditing', () => {
 
 		return VirtualTestEditor
 			.create( {
-				plugins: [ ImageEditing, ImageUploadEditing, Paragraph, UndoEditing, UploadAdapterPluginMock, Clipboard ]
+				plugins: [ ImageEditing, ImageUploadEditing, Paragraph, UndoEditing, UploadAdapterPluginMock ]
 			} )
 			.then( newEditor => {
 				editor = newEditor;
@@ -87,6 +87,14 @@ describe( 'ImageUploadEditing', () => {
 		adapterMocks = [];
 
 		return editor.destroy();
+	} );
+
+	it( 'should load Notification plugin', () => {
+		expect( editor.plugins.get( Notification ) ).to.instanceOf( Notification );
+	} );
+
+	it( 'should load Notification plugin', () => {
+		expect( editor.plugins.get( Clipboard ) ).to.instanceOf( Clipboard );
 	} );
 
 	it( 'should register proper schema rules', () => {
@@ -175,7 +183,7 @@ describe( 'ImageUploadEditing', () => {
 		// Clipboard plugin is required for this test.
 		return VirtualTestEditor
 			.create( {
-				plugins: [ ImageEditing, ImageUploadEditing, Paragraph, UploadAdapterPluginMock, Clipboard ]
+				plugins: [ ImageEditing, ImageUploadEditing, Paragraph, UploadAdapterPluginMock ]
 			} )
 			.then( editor => {
 				const fileMock = createNativeFileMock();
