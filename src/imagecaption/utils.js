@@ -10,7 +10,7 @@
 import { enablePlaceholder } from '@ckeditor/ckeditor5-engine/src/view/placeholder';
 import { toWidgetEditable } from '@ckeditor/ckeditor5-widget/src/utils';
 
-const captionSymbol = Symbol( 'imageCaption' );
+const IMAGE_CAPTION_CLASS_NAME = 'ck-image__caption';
 
 /**
  * Returns a function that creates a caption editable element for the given {@link module:engine/view/document~Document}.
@@ -22,7 +22,7 @@ const captionSymbol = Symbol( 'imageCaption' );
 export function captionElementCreator( view, placeholderText ) {
 	return writer => {
 		const editable = writer.createEditableElement( 'figcaption' );
-		writer.setCustomProperty( captionSymbol, true, editable );
+		writer.addClass( IMAGE_CAPTION_CLASS_NAME, editable );
 
 		enablePlaceholder( {
 			view,
@@ -41,7 +41,7 @@ export function captionElementCreator( view, placeholderText ) {
  * @returns {Boolean}
  */
 export function isCaption( viewElement ) {
-	return !!viewElement.getCustomProperty( captionSymbol );
+	return viewElement.is( 'element', 'figcaption' ) && viewElement.hasClass( IMAGE_CAPTION_CLASS_NAME );
 }
 
 /**

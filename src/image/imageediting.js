@@ -16,7 +16,10 @@ import {
 	srcsetAttributeConverter
 } from './converters';
 
-import { toImageWidget } from './utils';
+import {
+	toImageWidget,
+	createImageViewElement
+} from './utils';
 
 import ImageInsertCommand from './imageinsertcommand';
 
@@ -109,22 +112,4 @@ export default class ImageEditing extends Plugin {
 		// Register imageUpload command.
 		editor.commands.add( 'imageInsert', new ImageInsertCommand( editor ) );
 	}
-}
-
-// Creates a view element representing the image.
-//
-//		<figure class="image"><img></img></figure>
-//
-// Note that `alt` and `src` attributes are converted separately, so they are not included.
-//
-// @private
-// @param {module:engine/view/downcastwriter~DowncastWriter} writer
-// @returns {module:engine/view/containerelement~ContainerElement}
-export function createImageViewElement( writer ) {
-	const emptyElement = writer.createEmptyElement( 'img' );
-	const figure = writer.createContainerElement( 'figure', { class: 'image' } );
-
-	writer.insert( writer.createPositionAt( figure, 0 ), emptyElement );
-
-	return figure;
 }

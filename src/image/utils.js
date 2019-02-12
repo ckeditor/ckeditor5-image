@@ -9,8 +9,6 @@
 
 import { findOptimalInsertionPosition, isWidget, toWidget } from '@ckeditor/ckeditor5-widget/src/utils';
 
-const imageSymbol = Symbol( 'isImage' );
-
 /**
  * Converts a given {@link module:engine/view/element~Element} to an image widget:
  * * Adds a {@link module:engine/view/element~Element#_setCustomProperty custom property} allowing to recognize the image widget element.
@@ -22,8 +20,6 @@ const imageSymbol = Symbol( 'isImage' );
  * @returns {module:engine/view/element~Element}
  */
 export function toImageWidget( viewElement, writer, label ) {
-	writer.setCustomProperty( imageSymbol, true, viewElement );
-
 	return toWidget( viewElement, writer, { label: labelCreator } );
 
 	function labelCreator() {
@@ -41,7 +37,7 @@ export function toImageWidget( viewElement, writer, label ) {
  * @returns {Boolean}
  */
 export function isImageWidget( viewElement ) {
-	return !!viewElement.getCustomProperty( imageSymbol ) && isWidget( viewElement );
+	return isWidget( viewElement ) && viewElement.hasClass( 'image' );
 }
 
 /**
@@ -107,6 +103,24 @@ export function isImageAllowed( model ) {
 	return isImageAllowedInParent( selection, schema, model ) &&
 		!checkSelectionOnObject( selection, schema ) &&
 		isInOtherImage( selection );
+}
+
+// Creates a view element representing the image.
+//
+//		<figure class="image"><img></img></figure>
+//
+// Note that `alt` and `src` attributes are converted separately, so they are not included.
+//
+// @private
+// @param {module:engine/view/downcastwriter~DowncastWriter} writer
+// @returns {module:engine/view/containerelement~ContainerElement}
+export function createImageViewElement( writer ) {
+	const emptyElement = writer.createEmptyElement( 'img' );
+	const figure = writer.createContainerElement( 'figure', { class: 'image' } );
+
+	writer.insert( writer.createPositionAt( figure, 0 ), emptyElement );
+
+	return figure;
 }
 
 // Checks if image is allowed by schema in optimal insertion parent.

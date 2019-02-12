@@ -21,6 +21,7 @@ describe( 'image widget utils', () => {
 		writer = new ViewDowncastWriter( new ViewDocument() );
 		image = writer.createContainerElement( 'img' );
 		element = writer.createContainerElement( 'figure' );
+		writer.addClass( 'image', element );
 		writer.insert( writer.createPositionAt( element, 0 ), image );
 		toImageWidget( element, writer, 'image widget' );
 	} );
