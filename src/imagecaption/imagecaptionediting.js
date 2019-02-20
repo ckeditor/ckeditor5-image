@@ -8,6 +8,7 @@
  */
 
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import MouseObserver from '@ckeditor/ckeditor5-engine/src/view/observer/mouseobserver';
 import { isImage } from '../image/utils';
 import { captionElementCreator, getCaptionFromImage, matchImageCaption } from './utils';
 
@@ -75,6 +76,20 @@ export default class ImageCaptionEditing extends Plugin {
 
 		// Update caption visibility on view in post fixer.
 		view.document.registerPostFixer( writer => this._updateCaptionVisibility( writer ) );
+
+		// At least triple click inside `figcaption` element causes broken selection in Safari.
+		// See: https://github.com/ckeditor/ckeditor5/issues/1463.
+		view.addObserver( MouseObserver );
+
+		view.document.on( 'mousedown', ( evt, data ) => {
+			if ( data.domEvent.detail >= 3 && data.target.is( 'figcaption' ) ) {
+				data.domEvent.preventDefault();
+
+				view.change( writer => {
+					writer.setSelection( data.target, 'in' );
+				} );
+			}
+		} );
 	}
 
 	/**

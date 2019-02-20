@@ -13,6 +13,7 @@ import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import Typing from '@ckeditor/ckeditor5-typing/src/typing';
 
 import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
 import global from '@ckeditor/ckeditor5-utils/src/dom/global';
 
 describe( 'ImageCaption integration', () => {
@@ -116,13 +117,128 @@ describe( 'ImageCaption integration', () => {
 		} );
 	} );
 
-	function getDomEvent() {
-		return {
+	// See: https://github.com/ckeditor/ckeditor5/issues/1463
+	describe( 'multi clicking inside figcaption', () => {
+		beforeEach( () => {
+			return ClassicEditor
+				.create( editorElement, {
+					plugins: [
+						Enter, Typing, Paragraph, Image, ImageCaption
+					]
+				} )
+				.then( newEditor => {
+					editor = newEditor;
+					model = editor.model;
+					view = editor.editing.view;
+					viewDocument = view.document;
+				} );
+		} );
+
+		afterEach( () => {
+			return editor.destroy();
+		} );
+
+		it( 'does nothing when double clicked the caption', () => {
+			setModelData( model, '<image src=""><caption>Foo[]</caption></image>' );
+
+			const viewRoot = viewDocument.getRoot();
+			const target = view.domConverter.mapViewToDom( viewRoot.getChild( 0 ).getChild( 1 ) );
+
+			viewDocument.fire( 'mousedown', new DomEventData( view, getDomEvent( {
+				target,
+				detail: 2
+			} ) ) );
+
+			assertViewData(
+				'<figure class="ck-widget image" contenteditable="false">' +
+					'<img src=""></img>' +
+					// eslint-disable-next-line max-len
+					'<figcaption class="ck-editor__editable ck-editor__nested-editable" contenteditable="true" data-placeholder="Enter image caption">' +
+						'Foo{}' +
+					'</figcaption>' +
+				'</figure>'
+			);
+		} );
+
+		it( 'selects the entire figcaption on triple click', () => {
+			setModelData( model, '<image src=""><caption>Foo[]</caption></image>' );
+
+			const viewRoot = viewDocument.getRoot();
+			const target = view.domConverter.mapViewToDom( viewRoot.getChild( 0 ).getChild( 1 ) );
+
+			viewDocument.fire( 'mousedown', new DomEventData( view, getDomEvent( {
+				target,
+				detail: 3
+			} ) ) );
+
+			assertViewData(
+				'<figure class="ck-widget image" contenteditable="false">' +
+					'<img src=""></img>' +
+					// eslint-disable-next-line max-len
+					'<figcaption class="ck-editor__editable ck-editor__nested-editable" contenteditable="true" data-placeholder="Enter image caption">' +
+						'[Foo]' +
+					'</figcaption>' +
+				'</figure>'
+			);
+		} );
+
+		it( 'selects the entire figcaption on quadra click', () => {
+			setModelData( model, '<image src=""><caption>Foo[]</caption></image>' );
+
+			const viewRoot = viewDocument.getRoot();
+			const target = view.domConverter.mapViewToDom( viewRoot.getChild( 0 ).getChild( 1 ) );
+
+			viewDocument.fire( 'mousedown', new DomEventData( view, getDomEvent( {
+				target,
+				detail: 4
+			} ) ) );
+
+			assertViewData(
+				'<figure class="ck-widget image" contenteditable="false">' +
+					'<img src=""></img>' +
+					// eslint-disable-next-line max-len
+					'<figcaption class="ck-editor__editable ck-editor__nested-editable" contenteditable="true" data-placeholder="Enter image caption">' +
+						'[Foo]' +
+					'</figcaption>' +
+				'</figure>'
+			);
+		} );
+
+		it( 'does nothing if clicked element is not a figcaption', () => {
+			setModelData( model, '<image src=""><caption>Foo[]</caption></image>' );
+
+			const viewRoot = viewDocument.getRoot();
+			const target = view.domConverter.mapViewToDom( viewRoot.getChild( 0 ).getChild( 0 ) );
+
+			// After clicking the image element, the entire widget should be selected.
+			viewDocument.fire( 'mousedown', new DomEventData( view, getDomEvent( {
+				target,
+				detail: 3
+			} ) ) );
+
+			assertViewData(
+				'[<figure class="ck-widget ck-widget_selected image" contenteditable="false">' +
+					'<img src=""></img>' +
+					// eslint-disable-next-line max-len
+					'<figcaption class="ck-editor__editable ck-editor__nested-editable" contenteditable="true" data-placeholder="Enter image caption">' +
+						'Foo' +
+					'</figcaption>' +
+				'</figure>]'
+			);
+		} );
+	} );
+
+	function getDomEvent( options = {} ) {
+		return Object.assign( {}, options, {
 			preventDefault: sinon.spy()
-		};
+		} );
 	}
 
 	function assertModelData( output ) {
 		expect( getModelData( model ) ).to.equal( output );
+	}
+
+	function assertViewData( output ) {
+		expect( getViewData( view ) ).to.equal( output );
 	}
 } );

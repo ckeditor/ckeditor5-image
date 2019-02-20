@@ -9,6 +9,7 @@ import ImageCaptionEditing from '../../src/imagecaption/imagecaptionediting';
 import ImageEditing from '../../src/image/imageediting';
 import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import MouseObserver from '@ckeditor/ckeditor5-engine/src/view/observer/mouseobserver';
 
 import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
 import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
@@ -59,6 +60,10 @@ describe( 'ImageCaptionEditing', () => {
 
 		model.schema.extend( '$block', { allowAttributes: 'aligmnent' } );
 		expect( model.schema.checkAttribute( [ '$root', 'image', 'caption' ], 'alignment' ) ).to.be.false;
+	} );
+
+	it( 'should register MouseObserver', () => {
+		expect( view.getObserver( MouseObserver ) ).to.be.instanceOf( MouseObserver );
 	} );
 
 	describe( 'data pipeline', () => {
