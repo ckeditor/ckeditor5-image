@@ -127,7 +127,8 @@ class MyUploadAdapter {
 		} );
 
 		// Return a promise that will be resolved when the file is uploaded.
-		return server.upload( loader.file );
+		return loader.file
+			.then( file => server.upload( file ) );
 	}
 
 	// Aborts the upload process.
@@ -182,11 +183,12 @@ class MyUploadAdapter {
 
 	// Starts the upload process.
 	upload() {
-		return new Promise( ( resolve, reject ) => {
-			this._initRequest();
-			this._initListeners( resolve, reject );
-			this._sendRequest();
-		} );
+		return this.loader.file
+			.then( file => new Promise( ( resolve, reject ) => {
+				this._initRequest();
+				this._initListeners( resolve, reject, file );
+				this._sendRequest( file );
+			} ) );
 	}
 
 	// Aborts the upload process.
@@ -237,10 +239,10 @@ class MyUploadAdapter {
 	// ...
 
 	// Initializes XMLHttpRequest listeners.
-	_initListeners( resolve, reject ) {
+	_initListeners( resolve, reject, file ) {
 		const xhr = this.xhr;
 		const loader = this.loader;
-		const genericErrorText = 'Couldn\'t upload file:' + ` ${ loader.file.name }.`;
+		const genericErrorText = `Couldn't upload file: ${ file.name }.`;
 
 		xhr.addEventListener( 'error', () => reject( genericErrorText ) );
 		xhr.addEventListener( 'abort', () => reject() );
@@ -292,10 +294,11 @@ class MyUploadAdapter {
 	// ...
 
 	// Prepares the data and sends the request.
-	_sendRequest() {
+	_sendRequest( file ) {
 		// Prepare the form data.
 		const data = new FormData();
-		data.append( 'upload', this.loader.file );
+
+		data.append( 'upload', file );
 
 		// Important note: This is the right place to implement security mechanisms
 		// like authentication and CSRF protection. For instance, you can use
@@ -411,11 +414,12 @@ class MyUploadAdapter {
 
 	// Starts the upload process.
 	upload() {
-		return new Promise( ( resolve, reject ) => {
-			this._initRequest();
-			this._initListeners( resolve, reject );
-			this._sendRequest();
-		} );
+		return this.loader.file
+			.then( file => new Promise( ( resolve, reject ) => {
+				this._initRequest();
+				this._initListeners( resolve, reject, file );
+				this._sendRequest( file );
+			} ) );
 	}
 
 	// Aborts the upload process.
@@ -438,10 +442,10 @@ class MyUploadAdapter {
 	}
 
 	// Initializes XMLHttpRequest listeners.
-	_initListeners( resolve, reject ) {
+	_initListeners( resolve, reject, file ) {
 		const xhr = this.xhr;
 		const loader = this.loader;
-		const genericErrorText = 'Couldn\'t upload file:' + ` ${ loader.file.name }.`;
+		const genericErrorText = `Couldn't upload file: ${ file.name }.`;
 
 		xhr.addEventListener( 'error', () => reject( genericErrorText ) );
 		xhr.addEventListener( 'abort', () => reject() );
@@ -481,10 +485,11 @@ class MyUploadAdapter {
 	}
 
 	// Prepares the data and sends the request.
-	_sendRequest() {
+	_sendRequest( file ) {
 		// Prepare the form data.
 		const data = new FormData();
-		data.append( 'upload', this.loader.file );
+
+		data.append( 'upload', file );
 
 		// Important note: This is the right place to implement security mechanisms
 		// like authentication and CSRF protection. For instance, you can use
