@@ -41,6 +41,9 @@ export default class ImageStyleEditing extends Plugin {
 		// Get configuration.
 		const styles = normalizeImageStyles( editor.config.get( 'image.styles' ) );
 
+		// Update configuration with normalized styles.
+		editor.config.set( 'image.styles', styles );
+
 		// Allow imageStyle attribute in image.
 		// We could call it 'style' but https://github.com/ckeditor/ckeditor5-engine/issues/559.
 		schema.extend( 'image', { allowAttributes: 'imageStyle' } );
