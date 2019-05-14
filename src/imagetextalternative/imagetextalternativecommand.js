@@ -51,7 +51,11 @@ export default class ImageTextAlternativeCommand extends Command {
 		const imageElement = model.document.selection.getSelectedElement();
 
 		model.change( writer => {
-			writer.setAttribute( 'alt', options.newValue, imageElement );
+			if ( options.newValue != '' ) {
+				writer.setAttribute( 'alt', options.newValue, imageElement );
+			} else {
+				writer.removeAttribute( 'alt', imageElement );
+			}
 		} );
 	}
 }
