@@ -145,6 +145,24 @@ export default class TextAlternativeFormView extends View {
 			} );
 	}
 
+	destroy() {
+		super.destroy();
+
+		this.focusTracker && this.focusTracker && this.focusTracker.destroy(); this.focusTracker = null;
+		this.keystrokes && this.keystrokes && this.keystrokes.destroy(); this.keystrokes = null;
+		this._focusCycler && this._focusCycler && this._focusCycler.destroy(); this._focusCycler = null;
+
+		// Todo:
+this.labeledInput &&		this.labeledInput.destroy();
+this.labeledInput = null;
+this.saveButtonView &&		this.saveButtonView.destroy();
+this.saveButtonView = null;
+this.cancelButtonView &&		this.cancelButtonView.destroy();
+this.cancelButtonView = null;
+this.labeledInput &&		this.labeledInput.destroy();
+this.labeledInput = null;
+	}
+
 	/**
 	 * Creates the button view.
 	 *
