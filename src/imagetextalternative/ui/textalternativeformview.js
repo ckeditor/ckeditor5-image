@@ -148,19 +148,14 @@ export default class TextAlternativeFormView extends View {
 	destroy() {
 		super.destroy();
 
-		this.focusTracker && this.focusTracker && this.focusTracker.destroy(); this.focusTracker = null;
-		this.keystrokes && this.keystrokes && this.keystrokes.destroy(); this.keystrokes = null;
-		this._focusCycler && this._focusCycler && this._focusCycler.destroy(); this._focusCycler = null;
+		this.focusTracker.destroy();
+		this.keystrokes.destroy();
+		this._focusCycler.destroy();
 
-		// Todo:
-this.labeledInput &&		this.labeledInput.destroy();
-this.labeledInput = null;
-this.saveButtonView &&		this.saveButtonView.destroy();
-this.saveButtonView = null;
-this.cancelButtonView &&		this.cancelButtonView.destroy();
-this.cancelButtonView = null;
-this.labeledInput &&		this.labeledInput.destroy();
-this.labeledInput = null;
+		this.labeledInput.destroy();
+		this.saveButtonView.destroy();
+		this.cancelButtonView.destroy();
+		this.labeledInput.destroy();
 	}
 
 	/**
