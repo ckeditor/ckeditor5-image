@@ -17,13 +17,13 @@ import { toWidgetEditable } from '@ckeditor/ckeditor5-widget/src/utils';
  * @param {String} placeholderText The text to be displayed when the caption is empty.
  * @returns {Function}
  */
-export function captionElementCreator( view, placeholderText ) {
+export function captionElementCreator( editing, placeholderText ) {
 	return writer => {
 		const editable = writer.createEditableElement( 'figcaption' );
 		writer.setCustomProperty( 'imageCaption', true, editable );
 
 		enablePlaceholder( {
-			view,
+			editing,
 			element: editable,
 			text: placeholderText
 		} );

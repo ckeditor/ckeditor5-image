@@ -60,7 +60,7 @@ export default class ImageCaptionEditing extends Plugin {
 		data.downcastDispatcher.on( 'insert:caption', captionModelToView( createCaptionForData, false ) );
 
 		// Model to view converter for the editing pipeline.
-		const createCaptionForEditing = captionElementCreator( view, t( 'Enter image caption' ) );
+		const createCaptionForEditing = captionElementCreator( editing, t( 'Enter image caption' ) );
 		editing.downcastDispatcher.on( 'insert:caption', captionModelToView( createCaptionForEditing ) );
 
 		// Always show caption in view when something is inserted in model.
