@@ -188,7 +188,6 @@ export default class TextAlternativeFormView extends View {
 		const labeledInput = new LabeledInputView( this.locale, InputTextView );
 
 		labeledInput.label = t( 'Text alternative' );
-		labeledInput.inputView.placeholder = t( 'Text alternative' );
 
 		return labeledInput;
 	}
