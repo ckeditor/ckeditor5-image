@@ -3,6 +3,8 @@
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
+/* global setTimeout */
+
 /**
  * @module image/imageupload/imageuploadediting
  */
@@ -194,6 +196,16 @@ export default class ImageUploadEditing extends Plugin {
 
 				editor.editing.view.change( writer => {
 					writer.setAttribute( 'src', data, viewImg );
+				} );
+
+				setTimeout( () => {
+					const domFigure = editor.editing.view.domConverter.viewToDom( viewImg.parent );
+
+					domFigure.style.display = 'block';
+
+					setTimeout( () => {
+						domFigure.style.display = '';
+					} );
 				} );
 
 				model.enqueueChange( 'transparent', writer => {
