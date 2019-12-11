@@ -1,6 +1,65 @@
 Changelog
 =========
 
+## [16.0.0](https://github.com/ckeditor/ckeditor5-image/compare/v15.0.0...v16.0.0) (2019-12-04)
+
+### Bug fixes
+
+* Improved markup operation performance of the editor with the image plugin enabled. See [ckeditor/ckeditor5#4504](https://github.com/ckeditor/ckeditor5/issues/4504). ([6c7fc94](https://github.com/ckeditor/ckeditor5-image/commit/6c7fc94))
+
+### Other changes
+
+* Updated translations. ([01cdb59](https://github.com/ckeditor/ckeditor5-image/commit/01cdb59))
+
+
+## [15.0.0](https://github.com/ckeditor/ckeditor5-image/compare/v14.0.0...v15.0.0) (2019-10-23)
+
+### MAJOR BREAKING CHANGES
+
+* Removed `isImageType()` util.
+
+### Features
+
+* Introduced `config.image.upload.types` configuration option for setting allowed image mime-types. Closes [#295](https://github.com/ckeditor/ckeditor5-image/issues/295). Closes [ckeditor/ckeditor5#674](https://github.com/ckeditor/ckeditor5/issues/674). ([8c36aee](https://github.com/ckeditor/ckeditor5-image/commit/8c36aee))
+
+### Bug fixes
+
+* Initial resize of a side image with no width predefined now gives correct percentage values. Closes [#306](https://github.com/ckeditor/ckeditor5-image/issues/306). ([b084de5](https://github.com/ckeditor/ckeditor5-image/commit/b084de5))
+
+### Other changes
+
+* Added `pluginName` property to editing plugins. ([71adead](https://github.com/ckeditor/ckeditor5-image/commit/71adead))
+* Improved the resizer performance. Closes [ckeditor/ckeditor5#5191](https://github.com/ckeditor/ckeditor5/issues/5191). ([c46072b](https://github.com/ckeditor/ckeditor5-image/commit/c46072b))
+* Make the `Clipboard` plugin a required dependency of `ImageUploadEditing`. Closes [ckeditor/ckeditor5-core#193](https://github.com/ckeditor/ckeditor5-core/issues/193). ([311c48c](https://github.com/ckeditor/ckeditor5-image/commit/311c48c))
+* Updated translations. ([27effa2](https://github.com/ckeditor/ckeditor5-image/commit/27effa2)) ([93aa0bb](https://github.com/ckeditor/ckeditor5-image/commit/93aa0bb))
+
+
+## [14.0.0](https://github.com/ckeditor/ckeditor5-image/compare/v13.1.2...v14.0.0) (2019-08-26)
+
+### Features
+
+* Introduced widget resizer. Closes [#241](https://github.com/ckeditor/ckeditor5-image/issues/241). ([ddcb1b3](https://github.com/ckeditor/ckeditor5-image/commit/ddcb1b3))
+
+### Bug fixes
+
+* Image upload should handle images that are deeply nested in other blocks. Closes [ckeditor/ckeditor5#1985](https://github.com/ckeditor/ckeditor5/issues/1985). ([5a729d3](https://github.com/ckeditor/ckeditor5-image/commit/5a729d3))
+* Image widgets should not span the entire width of the editor. Closes [ckeditor/ckeditor5#1870](https://github.com/ckeditor/ckeditor5/issues/1870). ([b82ea85](https://github.com/ckeditor/ckeditor5-image/commit/b82ea85))
+* Improved stability of `ImageTextAlternative` balloon used in rotator. ([2e979cd](https://github.com/ckeditor/ckeditor5-image/commit/2e979cd))
+* The UI buttons should be marked as toggleable for better assistive technologies support (see [ckeditor/ckeditor5#1403](https://github.com/ckeditor/ckeditor5/issues/1403)). ([6c74d59](https://github.com/ckeditor/ckeditor5-image/commit/6c74d59))
+* Worked around Safari's image size bug. Closes [ckeditor/ckeditor5#1975](https://github.com/ckeditor/ckeditor5/issues/1975). ([8e14b03](https://github.com/ckeditor/ckeditor5-image/commit/8e14b03))
+
+### Other changes
+
+* The issue tracker for this package was moved to https://github.com/ckeditor/ckeditor5/issues. See [ckeditor/ckeditor5#1988](https://github.com/ckeditor/ckeditor5/issues/1988). ([a5451d6](https://github.com/ckeditor/ckeditor5-image/commit/a5451d6))
+* Removed the obsolete `--ck-color-upload-infinite-background` CSS custom property. See https://github.com/ckeditor/ckeditor5-theme-lark/pull/240. ([65c07cd](https://github.com/ckeditor/ckeditor5-image/commit/65c07cd))
+* The image widget toolbar should have a proper `aria-label` attribute (see [ckeditor/ckeditor5#1404](https://github.com/ckeditor/ckeditor5/issues/1404)). ([13af143](https://github.com/ckeditor/ckeditor5-image/commit/13af143))
+* Updated translations. ([f2a760d](https://github.com/ckeditor/ckeditor5-image/commit/f2a760d))
+
+### BREAKING CHANGES
+
+* From now on, all images in the editor use CSS `display: table` by default (`.ck-content .image { display: table }`). It can affect integrations and we recommend checking if images render correctly in your project after this update. There is a possibility you might need to adjust the CSS to adapt to this change.
+
+
 ## [13.1.2](https://github.com/ckeditor/ckeditor5-image/compare/v13.1.1...v13.1.2) (2019-07-10)
 
 Internal changes only (updated dependencies, documentation, etc.).
